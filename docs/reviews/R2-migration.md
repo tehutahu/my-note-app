@@ -6,6 +6,6 @@ TDD: `DATA-migration-red.log`4失敗→移行/abort/blocked/未知新版拒否�
 
 移行ではページ検索用の索引を追加する。ノート・筆跡・PDF添付を別形式に書き換える処理ではない。端末内DBのversionは2、ファイル受け渡しのschemaVersionは1。旧版コードは新版DBを開けない場合に新しい版での起動を案内する。
 
-再現: `docker compose run --rm app npm test`、`docker compose run --rm app pnpm run check`、`docker compose run --rm e2e`。ブラウザー証拠は`DATA-migration-ui-green.log`へ記録する。実機Hと公開CIは未実施、Git環境制限のためcommit/PRなし。
+再現: `docker compose run --rm app npm test`、`docker compose run --rm app pnpm run check`、`docker compose run --rm e2e`。ブラウザー証拠は`DATA-migration-ui-green.log`へ記録する。実機Hは未実施。実装commitは25d4211、CIのUID修正は491b277。PR #1でコンテナCIを確認中。
 
 最終結果: unit47件成功、check終了0。全体E2E初回28成功/locator不一致1、修正後の移行関連3E2E成功（4.6秒、retry 0）。build版ID `b84e0af582b8ec35`。GitHub認証は2026-09-08の再確認で利用可能になっているため、公開CI未実施の理由を「認証無効」とは扱わない。

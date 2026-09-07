@@ -15,6 +15,7 @@ test('NOTE-02 フォルダを作りノートを移動、改名・階層と再起
   await page.getByRole('button', { name: 'フォルダ: 議事録', exact: true }).click();
   await page.getByLabel('このフォルダの名前', { exact: true }).fill('確定');
   await page.getByRole('button', { name: '名前を変更', exact: true }).click();
+  await expect(page.locator('#folder-heading')).toHaveText('会議 / 確定');
   await page.reload();
   await expect(page.getByLabel('このフォルダの名前', { exact: true })).toHaveValue('確定');
   await page.getByRole('button', { name: 'はじめてのノート', exact: true }).click();

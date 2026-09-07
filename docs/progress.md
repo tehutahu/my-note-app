@@ -224,3 +224,7 @@
 ### PR #1 CIの権限修正
 
 PR https://github.com/tehutahu/my-note-app/pull/1 を作成。commit25d4211。CI run34167157743はcheckで `/workspace/artifacts` 作成EACCES（`CI-migration-failure.log`）。固定UID1000とrunnerのcheckout所有UIDが異なるため。ComposeにAPP_UID/APP_GID（既定1000）を追加し、CIでrunnerのIDを渡す修正を行う。非root要件は維持し、ソースのchmod/chownは行わない。現在のPRはCI未合格のため未統合。
+
+### CIでのNOTE-02テスト同期修正
+
+UID修正後のCI run34167346309はcheckまで成功し、E2E28成功/1失敗。NOTE-02が名前変更クリック直後にreloadし、非同期transactionのcommit前にページを破棄していた（`CI-migration-e2e-failure.log`）。保存後のlibrary再描画で更新される見出し「会議 / 確定」を待ってからreloadするように修正する。固定sleepやretry追加、受入基準緩和は行わない。CI権限問題は解消済み。
