@@ -1,0 +1,28 @@
+import { expect, test } from '@playwright/test';
+test('NOTE-03 背景3種と色をページ別に保存し、消しゴムで背景を消さない', async ({ page }) => {
+  await page.goto('/'); await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
+  const select = page.getByLabel('用紙の背景', { exact: true });
+  await expect(select).toBeVisible();
+  const pixel = (x: number, y: number) => page.locator('#committed').evaluate((el, p) => [...(el as HTMLCanvasElement).getContext('2d')!.getImageData(p.x, p.y, 1, 1).data], { x, y });
+  const plain = await pixel(12, 24);
+  await select.selectOption('ruled');
+  expect(await pixel(12, 24)).not.toEqual(plain);
+  expect(await pixel(24, 12)).toEqual(plain);
+  await page.getByRole('button', { name: 'ページを追加', exact: true }).click();
+  await select.selectOption('grid');
+  await page.getByLabel('背景色', { exact: true }).fill('#ffeecc');
+  await page.getByLabel('背景色', { exact: true }).dispatchEvent('change');
+  const grid = await pixel(24, 12);
+  expect(grid).not.toEqual(await pixel(12, 12));
+  await expect(page.getByTestId('save-status')).toHaveText('保存済み');
+  await page.reload();
+  await expect(select).toHaveValue('ruled');
+  await page.getByLabel('ページ選択', { exact: true }).selectOption('1');
+  await expect(select).toHaveValue('grid');
+  await expect(page.getByLabel('背景色', { exact: true })).toHaveValue('#ffeecc');
+  expect(await pixel(24, 12)).toEqual(grid);
+  await page.getByRole('button', { name: '消しゴム', exact: true }).click();
+  const canvas = page.getByLabel('手書きキャンバス', { exact: true }), box = (await canvas.boundingBox())!;
+  await page.mouse.click(box.x + 24, box.y + 12);
+  expect(await pixel(24, 12)).toEqual(grid);
+});

@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test';
+test('NOTE-04 フォルダをゴミ箱へ移し子孫とノートを復元する', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('新しいフォルダ名', { exact: true }).fill('復元するフォルダ');
+  await page.getByRole('button', { name: 'フォルダを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'フォルダ: 復元するフォルダ', exact: true }).click();
+  await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'このフォルダをゴミ箱へ', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'このフォルダをゴミ箱へ', exact: true }).click();
+  await page.getByRole('button', { name: 'ゴミ箱を開く', exact: true }).click();
+  await page.getByRole('button', { name: '復元: 復元するフォルダ', exact: true }).click();
+  await page.getByRole('button', { name: 'ノート一覧へ戻る', exact: true }).click();
+  await page.getByRole('button', { name: 'フォルダ: 復元するフォルダ', exact: true }).click();
+  await page.getByRole('button', { name: 'はじめてのノート', exact: true }).click();
+  await expect(page.getByTestId('save-status')).toHaveText('保存済み');
+});
+test('NOTE-04 完全削除の確認をキャンセルでき、確定後は復元対象から消える', async ({ page }) => {
+  await page.goto('/'); await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'ノートをゴミ箱へ', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'ノートをゴミ箱へ', exact: true }).click();
+  await page.getByRole('button', { name: 'ゴミ箱を開く', exact: true }).click();
+  const remove = page.getByRole('button', { name: '完全削除: はじめてのノート', exact: true });
+  await remove.click(); await page.getByRole('button', { name: 'キャンセル', exact: true }).click();
+  await expect(remove).toBeVisible();
+  await remove.click(); await page.getByRole('button', { name: '完全に削除する', exact: true }).click();
+  await expect(remove).toHaveCount(0);
+  await page.reload(); await page.getByRole('button', { name: 'ゴミ箱を開く', exact: true }).click();
+  await expect(page.getByRole('button', { name: '復元: はじめてのノート', exact: true })).toHaveCount(0);
+});

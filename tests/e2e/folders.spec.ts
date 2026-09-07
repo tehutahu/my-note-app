@@ -1,0 +1,22 @@
+import { expect, test } from '@playwright/test';
+test('NOTE-02 フォルダを作りノートを移動、改名・階層と再起動後を確認', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByLabel('新しいフォルダ名', { exact: true })).toBeVisible();
+  await page.getByLabel('新しいフォルダ名', { exact: true }).fill('会議');
+  await page.getByRole('button', { name: 'フォルダを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'フォルダ: 会議', exact: true }).click();
+  await page.getByLabel('新しいフォルダ名', { exact: true }).fill('議事録');
+  await page.getByRole('button', { name: 'フォルダを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
+  await page.getByLabel('ノートの移動先', { exact: true }).selectOption({ label: '会議 / 議事録' });
+  await page.getByRole('button', { name: 'ノートを移動', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'はじめてのノート', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'フォルダ: 議事録', exact: true }).click();
+  await page.getByLabel('このフォルダの名前', { exact: true }).fill('確定');
+  await page.getByRole('button', { name: '名前を変更', exact: true }).click();
+  await page.reload();
+  await expect(page.getByLabel('このフォルダの名前', { exact: true })).toHaveValue('確定');
+  await page.getByRole('button', { name: 'はじめてのノート', exact: true }).click();
+  await expect(page.getByTestId('stroke-count')).toHaveText('0筆');
+});

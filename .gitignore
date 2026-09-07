@@ -1,0 +1,9 @@
+node_modules/
+dist/
+artifacts/
+.env*
+*.snote
+*.pdf
+backups/
+playwright-report/
+test-results/
