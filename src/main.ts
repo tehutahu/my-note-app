@@ -12,9 +12,14 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 let canApplyUpdate = () => false;
 void registerPwa(() => canApplyUpdate());
 const main = document.querySelector('main')!;
-const repository = await Repository.open().catch(() => undefined);
+let openError = '端末内の保存領域を開けませんでした。ブラウザーのストレージ設定を確認してください。既存データは削除していません。';
+const repository = await Repository.open(undefined, () => {
+  const notice = document.createElement('p'); notice.setAttribute('role', 'alert'); notice.className = 'pwa-status';
+  notice.textContent = '別のタブで保存形式が更新されました。このタブの保存接続を閉じました。新しい版のアプリで開き直してください。';
+  document.querySelector('header')!.after(notice);
+}).catch(error => { if (error instanceof Error) openError = error.message; return undefined; });
 if (!repository) {
-  main.innerHTML = '<p role="alert">端末内の保存領域を開けませんでした。ブラウザーのストレージ設定を確認してください。既存データは削除していません。</p>';
+  main.innerHTML = '<p role="alert"></p>'; main.querySelector('p')!.textContent = openError;
 } else {
   const db = repository;
   let currentFolder: string | null = new URLSearchParams(location.hash.slice(1)).get('folder');
