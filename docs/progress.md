@@ -220,3 +220,7 @@
 ### Git/GitHubの現在状態（以前の障害記録を更新）
 
 実環境への読み取りで有効なGitリポジトリを確認。mainはorigin/mainを追跡し、remoteはhttps://github.com/tehutahu/my-note-app.git。直近commitは5a8bf18（remote設定記録）。サンドボックス内の.gitの見え方を変更せず、許可されたgit/gh操作を実環境で行う。GitHub認証・ネットワークも利用可能。既存CI run 34166518019の失敗は、移行のREDテスト4件に対して実装前のmainだったため。今回の移行差分を機能ブランチ/PRにまとめてCIへ渡す。
+
+### PR #1 CIの権限修正
+
+PR https://github.com/tehutahu/my-note-app/pull/1 を作成。commit25d4211。CI run34167157743はcheckで `/workspace/artifacts` 作成EACCES（`CI-migration-failure.log`）。固定UID1000とrunnerのcheckout所有UIDが異なるため。ComposeにAPP_UID/APP_GID（既定1000）を追加し、CIでrunnerのIDを渡す修正を行う。非root要件は維持し、ソースのchmod/chownは行わない。現在のPRはCI未合格のため未統合。
