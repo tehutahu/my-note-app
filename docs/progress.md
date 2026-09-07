@@ -189,3 +189,11 @@
 `DATA-conflict-green.log`関連5E2E成功（16.3秒、retry 0、終了0）。`DATA-conflict-final-unit.log`41テスト成功、`DATA-conflict-final-check.log`lint/型/coverage/build終了0。build版ID `387b8c65b07dcd7d`。実行中の検証なし。レビュー票は`R2-conflict.md`。全体受入は未完了。
 
 次の具体的作業: DATA-04で現在のIndexedDB schema1からの非破壊移行をテスト先行で整備する。旧接続を意図的に開いたブラウザーでblockedを再現し、日本語案内と旧データ保持を確認する。現状Repository.openはonblocked対応がなく、mainもopen失敗理由を捨てている。再現コマンドは追加後 `docker compose run --rm app npm test`、`docker compose run --rm e2e sh -c 'pnpm run build && pnpm exec playwright test tests/e2e/migration.spec.ts'`。新規本番依存は不要。
+
+## 2026-09-08 GitHubリモート登録
+
+- `.git` が空で有効なリポジトリではなかったため、既存ファイルを `.gitignore` に従って登録し、`main` の初回コミット `07d75cf`（`chore: initialize note app project`）を作成。
+- GitHub CLIのネットワーク接続可能な実行経路で `gh auth status` と `gh api user --jq '.login'` を確認。アカウント `tehutahu`、API応答ともに成功。
+- GitHub公開リポジトリ `https://github.com/tehutahu/my-note-app` を作成し、`origin` に登録。`main` をpush済み。ローカルは `main...origin/main` で差分なし。
+- `dist/`、`artifacts/`、PDF、`.snote`、`.env*` は `.gitignore` により初回pushへ含めていない。
+- GitHub Actions/CIはpush直後で、成功結果は未確認。次回開始時は `gh auth status`、`git status --short --branch`、`gh run list --limit 5` を確認する。
