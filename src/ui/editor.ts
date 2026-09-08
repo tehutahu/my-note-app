@@ -24,7 +24,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   <button id="finger" aria-pressed="false">指書き OFF</button>
   <button id="zoom-out" aria-label="縮小">−</button><output data-testid="zoom" aria-label="倍率">100%</output><button id="zoom-in" aria-label="拡大">＋</button><button id="fit">用紙を合わせる</button>
   </div><div class="paper-space"><canvas id="pdf-layer" aria-hidden="true"></canvas><canvas id="committed" aria-hidden="true"></canvas><canvas id="ink" aria-label="手書きキャンバス" tabindex="0"></canvas></div>
-  <footer><span data-testid="stroke-count">0筆</span><span data-testid="element-count">0要素</span><span data-testid="pdf-status"></span><span>ペンで書く・指で移動／拡大</span></footer>`;
+  <footer><span data-testid="stroke-count">0筆</span><span data-testid="element-count">0要素</span><span data-testid="pdf-status"></span><span>ペンで書く・側面ボタンでペン／消しゴム切替・指で移動／拡大</span></footer>`;
   const canvas = main.querySelector<HTMLCanvasElement>('#ink')!;
   const committed = main.querySelector<HTMLCanvasElement>('#committed')!;
   const pdfLayer = main.querySelector<HTMLCanvasElement>('#pdf-layer')!;
@@ -158,10 +158,24 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
     clear(ctx); render(); if (active) paint(ctx, active);
   };
   const observer = new ResizeObserver(resize); observer.observe(stage); resize();
-  for (const button of main.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => {
-    cancel(); tool = button.dataset.tool!;
-    for (const other of main.querySelectorAll<HTMLButtonElement>('[data-tool]')) other.setAttribute('aria-pressed', String(other === button));
+  const selectTool = (next: string) => {
+    cancel(); tool = next;
+    for (const other of main.querySelectorAll<HTMLButtonElement>('[data-tool]')) other.setAttribute('aria-pressed', String(other.dataset.tool === tool));
   };
+  for (const button of main.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => selectTool(button.dataset.tool!);
+  const barrelPressed = new Set<number>();
+  const barrel = (event: PointerEvent) => {
+    if (event.pointerType !== 'pen') return false;
+    const pressed = (event.buttons & 2) !== 0;
+    const rising = pressed && !barrelPressed.has(event.pointerId);
+    if (pressed) barrelPressed.add(event.pointerId); else barrelPressed.delete(event.pointerId);
+    if (rising && !conflicted()) selectTool(tool === 'eraser' ? 'pen' : 'eraser');
+    return pressed || rising;
+  };
+  const releaseBarrel = (event: PointerEvent) => { barrelPressed.delete(event.pointerId); };
+  window.addEventListener('pointerup', releaseBarrel);
+  window.addEventListener('pointercancel', releaseBarrel);
+  canvas.addEventListener('contextmenu', event => { if (event.pointerType === 'pen') event.preventDefault(); });
   main.querySelector<HTMLButtonElement>('#undo')!.onclick = () => { cancel(); history.undo(); persist(); render(); };
   main.querySelector<HTMLButtonElement>('#redo')!.onclick = () => { cancel(); history.redo(); persist(); render(); };
   const finger = main.querySelector<HTMLButtonElement>('#finger')!;
@@ -180,7 +194,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   }, { passive: false });
   canvas.onkeydown = event => { if (event.code === 'Space') { event.preventDefault(); space = true; } };
   canvas.onkeyup = event => { if (event.code === 'Space') space = false; };
-  canvas.onblur = () => { space = false; cancel(); };
+  canvas.onblur = () => { space = false; barrelPressed.clear(); cancel(); };
   const sample = (event: PointerEvent) => {
     const rect = canvas.getBoundingClientRect();
     return { id: event.pointerId, kind: event.pointerType, x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -189,6 +203,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   const erase = (event: PointerEvent) => { erased = erased!.filter(element => !(element.type === 'stroke' ? hitsStroke(element, point(event), 8) : hitsShape(element, point(event), 8))); render(); };
   canvas.onpointerdown = event => {
     if (conflicted()) return;
+    if (barrel(event)) return;
     if (event.button !== 0) return;
     const result = gestures.down(sample(event), fingerInk, space || tool === 'pan');
     if (event.isTrusted) { canvas.setPointerCapture(event.pointerId); canvas.focus({ preventScroll: true }); }
@@ -206,6 +221,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
     paint(ctx, active);
   };
   canvas.onpointermove = event => {
+    if (barrel(event)) return;
     const before = { ...gestures.camera }; gestures.move(sample(event));
     if (before.x !== gestures.camera.x || before.y !== gestures.camera.y || before.zoom !== gestures.camera.zoom) { clear(ctx); render(); }
     if (event.pointerId !== gestures.owner || gestures.mode !== 'drawing') return;
@@ -221,6 +237,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
     else paint(ctx, active, start);
   };
   canvas.onpointerup = event => {
+    releaseBarrel(event);
     if (event.pointerId === gestures.owner && gestures.mode === 'drawing') {
       if (active) {
         const end = point(event);
@@ -235,7 +252,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
     }
     gestures.up(event.pointerId);
   };
-  canvas.onpointercancel = event => { if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
-  canvas.onlostpointercapture = event => { if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
-  return { update, canUpdate: () => session.status === 'saved' && !active && !erased && title.value.trim() === session.snapshot.notebook.title && !pdfButton.disabled && !exportButton.disabled, dispose: () => { renderGeneration++; pdfRenderer.dispose(); observer.disconnect(); window.removeEventListener('beforeunload', beforeUnload); } };
+  canvas.onpointercancel = event => { releaseBarrel(event); if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
+  canvas.onlostpointercapture = event => { releaseBarrel(event); if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
+  return { update, canUpdate: () => session.status === 'saved' && !active && !erased && title.value.trim() === session.snapshot.notebook.title && !pdfButton.disabled && !exportButton.disabled, dispose: () => { renderGeneration++; pdfRenderer.dispose(); observer.disconnect(); window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('pointerup', releaseBarrel); window.removeEventListener('pointercancel', releaseBarrel); } };
 }
