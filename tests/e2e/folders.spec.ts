@@ -21,3 +21,24 @@ test('NOTE-02 フォルダを作りノートを移動、改名・階層と再起
   await page.getByRole('button', { name: 'はじめてのノート', exact: true }).click();
   await expect(page.getByTestId('stroke-count')).toHaveText('0筆');
 });
+test('NOTE-02 フォルダ移動の読込中は旧画面を編集させず、移動先の名前だけ変更する', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('新しいフォルダ名', { exact: true }).fill('親'); await page.getByRole('button', { name: 'フォルダを作る', exact: true }).click();
+  await page.getByRole('button', { name: 'フォルダ: 親', exact: true }).click(); await expect(page.locator('#folder-heading')).toHaveText('親');
+  await page.getByLabel('新しいフォルダ名', { exact: true }).fill('子'); await page.getByRole('button', { name: 'フォルダを作る', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'フォルダ: 子', exact: true })).toBeVisible();
+  await page.evaluate(async () => {
+    const op = indexedDB.open('my-note-app'); const db = await new Promise<IDBDatabase>(resolve => { op.onsuccess = () => resolve(op.result); });
+    const tx = db.transaction('folders', 'readwrite'); let held = true;
+    Object.assign(window, { releaseNavigation: () => { held = false; } });
+    const keep = () => { const query = tx.objectStore('folders').get('hold'); query.onsuccess = () => { if (held) keep(); }; }; keep();
+    tx.oncomplete = () => db.close();
+  });
+  await page.getByRole('button', { name: 'フォルダ: 子', exact: true }).click();
+  await expect(page.getByLabel('このフォルダの名前', { exact: true })).toBeDisabled();
+  await page.evaluate(() => (window as unknown as { releaseNavigation: () => void }).releaseNavigation());
+  await expect(page.locator('#folder-heading')).toHaveText('親 / 子');
+  await page.getByLabel('このフォルダの名前', { exact: true }).fill('変更後'); await page.getByRole('button', { name: '名前を変更', exact: true }).click();
+  await expect(page.locator('#folder-heading')).toHaveText('親 / 変更後');
+  await page.reload(); await expect(page.locator('#folder-heading')).toHaveText('親 / 変更後');
+});

@@ -228,3 +228,12 @@ PR https://github.com/tehutahu/my-note-app/pull/1 を作成。commit25d4211。CI
 ### CIでのNOTE-02テスト同期修正
 
 UID修正後のCI run34167346309はcheckまで成功し、E2E28成功/1失敗。NOTE-02が名前変更クリック直後にreloadし、非同期transactionのcommit前にページを破棄していた（`CI-migration-e2e-failure.log`）。保存後のlibrary再描画で更新される見出し「会議 / 確定」を待ってからreloadするように修正する。固定sleepやretry追加、受入基準緩和は行わない。CI権限問題は解消済み。
+
+## 2026-09-08 再開・フォルダ移動競合の根本修正
+
+- 前回は自動承認レビュー側の利用上限でDocker実行が拒否された。ユーザーの再開指示後、通常のDocker実行が可能になったことを確認し、同じテストから再開。
+- CI run34167658687は見出し待ちを加えてもNOTE-02が失敗。単なるcommit待ちだけでなく、移動中も旧フォルダの入力欄が操作できる競合があった。先の「reload前の待ちだけが原因」という記録は不十分だった。
+- `NOTE-navigation-red.log`でDB読み込みを保持し、移動中の旧入力欄がenabledのままである失敗を確認。
+- 画面遷移と整理操作をwithViewLockで囲み、旧controlsをdisabled、mainをinert/aria-busyにする。完了/失敗時に解除し、処理中のPWA更新も拒否する。旧ノートcanvasへの入力も停止する。
+- `NOTE-navigation-green.log`関連4E2E成功（9.6秒）：元のフォルダ操作、遅延中の旧画面停止、競合コピー、PWA更新。固定sleep/retry追加なし。
+- 変更後npm test/checkを`NOTE-navigation-final-unit.log`/`NOTE-navigation-final-check.log`へ実行中。PR #1へ反映しCIを再確認する。目標全体は継続。
