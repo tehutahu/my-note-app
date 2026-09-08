@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { Repository } from '../../src/storage/repository';
 import type { NoteSnapshot } from '../../src/domain/notebook';
 const opened: Repository[] = [];
@@ -9,6 +9,19 @@ function fixture(): NoteSnapshot {
   return { notebook: { id: 'n1', folderId: null, title: '会議メモ', pageIds: ['p1'], revision: 0, createdAt: '2026-09-06T00:00:00.000Z', updatedAt: '2026-09-06T00:00:00.000Z', deletedAt: null },
     pages: [{ id: 'p1', notebookId: 'n1', widthPt: 595.28, heightPt: 841.89, background: { kind: 'plain', color: '#ffffff' }, elements: [], revision: 0 }] };
 }
+it('XFER-04 既にabortされたtransactionの元の失敗を再abortで隠さず全追加を戻す', async () => {
+  const db = await open(); await db.create(fixture()); const before = await db.snapshot();
+  const next = fixture(); next.notebook.id = 'n2'; next.notebook.pageIds = ['p2']; next.pages[0].id = 'p2'; next.pages[0].notebookId = 'n2';
+  const original = IDBObjectStore.prototype.add;
+  const spy = vi.spyOn(IDBObjectStore.prototype, 'add').mockImplementation(function (this: IDBObjectStore, ...args) {
+    const result = original.apply(this, args);
+    if (this.name === 'pages') this.transaction.abort();
+    return result;
+  });
+  try { await expect(db.importSnapshot({ folders: [], notebooks: [next.notebook], pages: next.pages, attachments: [] })).rejects.toMatchObject({ name: 'AbortError' }); }
+  finally { spy.mockRestore(); }
+  expect(await db.snapshot()).toEqual(before);
+});
 it('DATA-01 ノートと全ページを保存し接続を開き直して復元する', async () => {
   const name = crypto.randomUUID(), db = await open(name), note = fixture();
   await db.create(note); db.close();

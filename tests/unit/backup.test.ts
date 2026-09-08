@@ -31,3 +31,10 @@ it('XFER-03 JSON不正・未来版・循環・参照欠落・不正数値を拒�
   const missing = JSON.parse(text); missing.notebooks[0].pageIds = [crypto.randomUUID()]; await expect(decodeBackup(JSON.stringify(missing))).rejects.toThrow();
   const nan = JSON.parse(text); nan.pages[0].elements[0].points[0].x = null; await expect(decodeBackup(JSON.stringify(nan))).rejects.toThrow();
 });
+it('XFER-03 base64の不正文字・空白・余分なpadding・非正規形・サイズ/hash不一致を日本語で拒否', async () => {
+  const backup = JSON.parse(await encodeBackup(fixture()));
+  for (const dataBase64 of ['@A==', 'AA= ', 'AB==', 'A A=', 'AA===', '', 'AA==']) {
+    backup.attachments = [{ id: crypto.randomUUID(), mimeType: 'application/pdf', size: 1, sha256: '0'.repeat(64), dataBase64 }];
+    await expect(decodeBackup(JSON.stringify(backup))).rejects.toThrow(/バックアップを読み込めません: (base64|添付SHA-256)/);
+  }
+});

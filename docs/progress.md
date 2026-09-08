@@ -281,3 +281,19 @@ main run34195652006はverify/deployともsuccess、2026-09-08 06:42:28 UTC完了
 run34232383303は35成功/1失敗。320px試験の「一覧へ戻る」直後、旧エディターのcontrols.all()の添字を非同期に追い、一覧再描画後にnth(11)が消えてtimeout。`CI-ui-failure.log`を記録。戻り先見出しを待ち、サイズ計測はevaluateAllの同じ瞬間のsnapshotに変更。`UI-ci-sync-green.log`6成功、`UI-ci-sync-unit.log`49成功（並行して作業中のbackup追加1件含む）。試験の同期修正のみをPR #3へ反映する。
 
 独立したXFER作業はまだ未コミット。`XFER-boundary-red.log`で20MiB PDFのbase64正規表現がMaximum call stack size exceeded。正規形と長さ/atob/btoaによる検査へ修正し、`XFER-boundaries-all.log`20MiB・添付64MiB・1000ページ・200万点・UTF-8 100MiBの許容境界と超過の5試験成功（11.36秒）。`XFER-boundary-check.log`49テスト/check成功。PR #3のCI合格後に別ブランチへ持ち越し、実ブラウザー復元/不正fixture/取り込み原子性の残件を継続する。
+
+## 2026-09-08 バックアップ境界・取り込み保護
+
+- PR #3は8ee53abで両CI成功、mainへ統合（4f6c3fd）。main run34233375283もverify/deploy成功。`HTTPS-ui-live.log`実サイト1成功（20.5秒）：commit4f6c3fd、合成PDFのoffline再表示・筆記保存・二形式出力。実機Hは未回答。
+- 現在fix/backup-size-boundaries。作業中の差分は範囲限定stashで保持して復元済み。新規本番依存なし。
+- `XFER-boundary-red.log`20MiB PDFのbase64正規表現でRangeError。長さを先に検査し、atobの例外とbtoaの正規形照合へ変更。Uint8Arrayはサイズ確保後にbyteを埋め、巨大な中間配列を作らない。`XFER-boundaries-all.log`5成功（11.36秒）：20MiB PDF、64MiB添付合計、1000ページ、200万点、UTF-8 100MiBそれぞれ許容境界/超過。専用vitest.boundaries.config.tsをCIへ追加、通常npm testからは分離。
+- `XFER-integrity-red.log`：20MiB PDFは実ブラウザーで復元/表示成功。破損JSONの失敗後に検証中の表示が残り1失敗。失敗状態表示を修正。`XFER-integrity-green.log`3成功（15.3秒）：20MiB原本hash/base64一致、失敗状態、PDF＋3階層を独立browser contextへ往復して編集・復元・元データ保持。
+- 不正format/version/reference/cycle/finite/hash/base64/size/PDF page/duplicate ID/corrupt PDFの11fixtureとDB前後比較、commit途中abort/QuotaExceededError/検証中キャンセルをE2Eへ追加。
+- `XFER-matrix-red.log`4成功/1失敗：途中abort時、二重abortのInvalidStateErrorで元の原因が隠れて英語表示。`XFER-abort-cause-red.log`でも元AbortErrorがInvalidStateErrorへ置換される失敗を確認。Repository.transactionで再abortが失敗しても元の例外を保持。取込のDOMExceptionには日本語の容量不足/中断案内を表示する。
+- `XFER-abort-check.log`npm test50成功/check終了0。現在`XFER-all-e2e.log`全41件を実行中。未完了のまま成功とはしていない。全体目標にはPDF-04の全拒否fixture/文字保持、XFERゴミ箱往復の追加監査、UI失敗状態、診断性能、最終Firefox/3回/全受入対応表、各実機Hが残る。
+
+### バックアップ全体回帰の結果
+
+`XFER-all-e2e.log`41成功（2.5分、retry0、終了0）。不正fixture11種類、3階層/PDF往復、途中abort/容量不足/キャンセルも成功。最後のattachments store追加時にabortするケースと3階層追加をXFER-04へ補強し、`XFER-verified-check.log`npm test50成功/check終了0。`XFER-verified-e2e.log`で関連5件を再検証中。追加後にCIへ反映する。
+
+`XFER-verified-e2e.log`関連5成功（15.8秒、retry0、終了0）。実行中のローカル検証なし。
