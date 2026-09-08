@@ -127,7 +127,12 @@ if (!repository) {
         if (cancelled) return;
         cancelImport.hidden = true; status.textContent = '保存中です。この段階ではキャンセルできません。';
         await db.importSnapshot(copyLibrary(decoded)); currentFolder = null; await library();
-      } catch (error) { report(error); }
+      } catch (error) {
+        status.textContent = '取り込みに失敗しました';
+        report(error instanceof DOMException ? new Error(error.name === 'QuotaExceededError'
+          ? '保存容量が不足しています。バックアップを確保してから空き容量を確認してください。'
+          : '取り込みを完了できませんでした。既存のノートは変更されていません。') : error);
+      }
       finally { upload.disabled = false; upload.value = ''; cancelImport.hidden = true; }
     };
     const trash = document.createElement('button'); trash.textContent = 'ゴミ箱を開く';

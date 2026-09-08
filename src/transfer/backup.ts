@@ -91,9 +91,12 @@ export async function decodeBackup(text: string): Promise<LibrarySnapshot> {
   for (const a of attachments) {
     requireValue(a.mimeType === 'application/pdf', '添付形式が未対応です'); integer(a.size); requireValue((a.size as number) <= 20 * MiB, 'PDFは20MiBまでです');
     attachmentBytes += a.size as number; requireValue(attachmentBytes <= 64 * MiB, '添付合計は64MiBまでです');
-    requireValue(typeof a.dataBase64 === 'string' && /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(a.dataBase64), 'base64が不正です');
-    const binary = atob(a.dataBase64); requireValue(btoa(binary) === a.dataBase64 && binary.length === a.size, '添付サイズが一致しません');
-    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    requireValue(typeof a.dataBase64 === 'string' && a.dataBase64.length === 4 * Math.ceil((a.size as number) / 3), 'base64または添付サイズが不正です');
+    let binary: string;
+    try { binary = atob(a.dataBase64); } catch { throw new Error('バックアップを読み込めません: base64が不正です'); }
+    requireValue(btoa(binary) === a.dataBase64 && binary.length === a.size, 'base64または添付サイズが不正です');
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     requireValue(await sha256(bytes) === a.sha256, '添付SHA-256が一致しません');
     let count: number;
     try { const pdf = await PDFDocument.load(bytes); count = pdf.getPageCount(); } catch { throw new Error('添付PDFが破損、暗号化、または未対応です'); }

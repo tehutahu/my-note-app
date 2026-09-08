@@ -15,6 +15,7 @@ jobs:
       - run: docker compose run --rm app pnpm install --frozen-lockfile
       - run: docker compose run --rm app npm test
       - run: docker compose run --rm app pnpm run check
+      - run: docker compose run --rm app pnpm exec vitest run --config vitest.boundaries.config.ts
       - run: docker compose run --rm e2e
       - name: Build and verify the Pages subpath
         run: docker compose run --rm -e BUILD_COMMIT=${{ github.sha }} e2e sh -c 'BASE_PATH=/my-note-app/ pnpm run build && pnpm exec playwright test --config playwright.subpath.config.ts'

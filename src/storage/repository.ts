@@ -129,7 +129,10 @@ export class Repository {
       tx.oncomplete = () => resolve();
       tx.onabort = () => reject(tx.error ?? new Error('保存を中止しました'));
     });
-    const result = body(tx).catch(error => { tx.abort(); throw error; });
+    const result = body(tx).catch(error => {
+      try { tx.abort(); } catch { /* The transaction may already have aborted. Preserve the original cause. */ }
+      throw error;
+    });
     const [value] = await Promise.all([result, complete]);
     return value;
   }
