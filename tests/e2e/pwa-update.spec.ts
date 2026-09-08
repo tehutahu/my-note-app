@@ -8,7 +8,7 @@ test('PWA-03 未保存タブがある更新を拒否し保存後の明示適用�
   });
   const path = '/workspace/dist/sw.js', original = await readFile(path, 'utf8');
   try {
-    await page.goto('/'); await expect(page.getByTestId('offline-status')).toHaveText('オフライン準備完了');
+    await page.goto('/'); await expect(page.getByTestId('offline-status')).toHaveText('オフライン準備完了', { timeout: 20000 });
     await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
     const other = await context.newPage(); await other.goto(page.url());
     await expect(other.getByTestId('save-status')).toHaveText('保存済み');

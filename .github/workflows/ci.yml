@@ -17,6 +17,8 @@ jobs:
       - run: docker compose run --rm app pnpm run check
       - run: docker compose run --rm app pnpm exec vitest run --config vitest.boundaries.config.ts
       - run: docker compose run --rm e2e
+      - name: Verify the same production build in Firefox
+        run: docker compose run --rm e2e pnpm exec playwright test --config playwright.firefox.config.ts
       - name: Build and verify the Pages subpath
         run: docker compose run --rm -e BUILD_COMMIT=${{ github.sha }} e2e sh -c 'BASE_PATH=/my-note-app/ pnpm run build && pnpm exec playwright test --config playwright.subpath.config.ts'
       - uses: actions/upload-pages-artifact@v4
