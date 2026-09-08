@@ -82,7 +82,8 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   window.addEventListener('beforeunload', beforeUnload);
   let tool = 'pen', fingerInk = false, space = false;
   let active: PageElement | null = null, erased: PageElement[] | null = null;
-  gestures.camera.zoom = Math.min(1, stage.clientWidth / 595.28);
+  const fitZoom = () => Math.max(.25, Math.min(1, stage.clientWidth / currentPage().widthPt));
+  gestures.camera.zoom = fitZoom();
   const view = () => ({ left: canvas.getBoundingClientRect().left, top: canvas.getBoundingClientRect().top,
     panX: gestures.camera.x, panY: gestures.camera.y, zoom: gestures.camera.zoom });
   const clear = (context: CanvasRenderingContext2D) => {
@@ -172,7 +173,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   };
   main.querySelector<HTMLButtonElement>('#zoom-in')!.onclick = () => zoomAt(1.25, stage.clientWidth / 2, stage.clientHeight / 2);
   main.querySelector<HTMLButtonElement>('#zoom-out')!.onclick = () => zoomAt(.8, stage.clientWidth / 2, stage.clientHeight / 2);
-  main.querySelector<HTMLButtonElement>('#fit')!.onclick = () => { cancel(); gestures.camera = { x: 0, y: 0, zoom: Math.max(.25, Math.min(1, stage.clientWidth / 595.28)) }; clear(ctx); render(); };
+  main.querySelector<HTMLButtonElement>('#fit')!.onclick = () => { cancel(); gestures.camera = { x: 0, y: 0, zoom: fitZoom() }; clear(ctx); render(); };
   canvas.addEventListener('wheel', event => {
     if (!event.ctrlKey) return;
     event.preventDefault(); const rect = canvas.getBoundingClientRect(); zoomAt(Math.exp(-event.deltaY * .002), event.clientX - rect.left, event.clientY - rect.top);
