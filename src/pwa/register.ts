@@ -40,7 +40,7 @@ export async function registerPwa(canUpdate: () => boolean): Promise<void> {
     channel.port1.onmessage = event => {
       if (event.data.ready) {
         status.textContent = 'オフライン準備完了';
-        document.querySelector('.version')!.textContent = `0.1.0 / ${event.data.version}`;
+        document.querySelector('.version')!.textContent = `0.1.0 / ${event.data.version} / ${event.data.commit || 'ローカル'}`;
       }
       channel.port1.close();
     };

@@ -16,9 +16,32 @@ jobs:
       - run: docker compose run --rm app npm test
       - run: docker compose run --rm app pnpm run check
       - run: docker compose run --rm e2e
+      - name: Build and verify the Pages subpath
+        run: docker compose run --rm -e BUILD_COMMIT=${{ github.sha }} e2e sh -c 'BASE_PATH=/my-note-app/ pnpm run build && pnpm exec playwright test --config playwright.subpath.config.ts'
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: dist
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: verification
           path: artifacts/
           retention-days: 14
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy the verified build
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -33,6 +33,10 @@ async function files(dir) {
   return result.sort();
 }
 const assets = await files('dist'), hash = createHash('sha256');
+const commit = /^[a-f0-9]{40}$/.test(process.env.BUILD_COMMIT || '') ? process.env.BUILD_COMMIT.slice(0, 7) : 'ローカル';
+hash.update(commit);
+// Worker changes must never reuse (or delete on a failed install) the active cache.
+hash.update(await readFile(new URL(import.meta.url)));
 for (const file of assets) { hash.update(file); hash.update(await readFile(file)); }
 const version = hash.digest('hex').slice(0, 16);
 const worker = `const VERSION = ${JSON.stringify(version)};
@@ -82,7 +86,7 @@ self.addEventListener('message', event => {
     })());
   }
 
-  if (event.data?.type === 'STATUS') event.ports[0]?.postMessage({ version: VERSION, ready: true });
+  if (event.data?.type === 'STATUS') event.ports[0]?.postMessage({ version: VERSION, commit: ${JSON.stringify(commit)}, ready: true });
 });
 `;
 await writeFile('dist/sw.js', worker);
