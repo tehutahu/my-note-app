@@ -24,3 +24,7 @@
 ### 最終ローカル結果
 
 `PWA-final-verified.log` npm test48成功、check終了0。初回commit fixtureの文字数誤りを修正した履歴はprogressに記録。`PWA-final-e2e.log` PWA3件（9.7秒）/subpath1件（6.2秒）成功、retry0。変更なしでのworker再生成一致、worker変更による別cache、未保存更新拒否、offlineの保存・出力を確認。
+
+### 公開確認（2026-09-08）
+
+公開URL https://tehutahu.github.io/my-note-app/ 、commit72148fb、PWA版0e8cad383bd7238a。PR #2の両CIとmain run34195652006のverify/deploy成功。`HTTPS-live.log`実サイト1成功（22.5秒）、合成PDFをオフラインで再起動・筆記保存・二形式出力、404/外部通信/書込み要求0。再現は `docker compose run --rm -e EXPECTED_COMMIT=72148fb e2e pnpm exec playwright test --config playwright.live.config.ts`（公開版の更新後はcommitを合わせる）。公開版は現在のmainを配信するため、ユーザー確認時にも版を記録してください。Android/Windows実機は未回答。

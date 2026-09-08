@@ -259,3 +259,19 @@ UID修正後のCI run34167346309はcheckまで成功し、E2E28成功/1失敗。
 `PWA-final-unit.log`/`PWA-final-check.log`の初回は試験用commitが39文字のため「ローカル」と判定され1失敗。fixtureを40文字へ修正し、`PWA-final-verified.log`でnpm test48成功、check全成功（終了0）。入力値検査は緩めていない。現在`PWA-final-e2e.log`で既存PWA3件とsubpath1件を再検証中。
 
 `PWA-final-e2e.log`は既存PWA3件成功（9.7秒）＋subpath1件成功（6.2秒）、いずれもretry0/終了0。公開前の関連検証完了。CIへ反映し、全体E2Eを新規runnerで確認する。
+
+## PWAのCI統合と画面検証の継続
+
+- PR #2（cac81fc）push run34195409178/PR run34195438989ともCI成功。mainへsquash mergeし72148fbを取得済み。
+- GitHub Pagesをworkflow配信として設定済み（HTTPS強制）。予定URL https://tehutahu.github.io/my-note-app/ 。main run34195652006で全チェック・配布を実行中。まだ公開到達成功とはしていない。
+- fix/pdf-fit-and-ui-verificationへ移動。`UI-responsive-red.log`：4画面幅320/412/800/1280で横はみ出し≤1px、主要操作44px以上、長い日本語タイトルの表示を確認。横長PDF初期倍率は期待63%に対して100%で失敗（終了1）。現在ページのwidthPtを使うfitZoomへ修正。
+- `UI-responsive-green.log`はPDF関連と4画面幅で7成功、UI-02がTab巡回時のダイアログ外フォーカスで1失敗。確認画面のTab/Shift+Tabをボタン間で循環する処理を追加。`UI-final-check.log` npm test48成功/check終了0。`UI-final-e2e.log`関連8件を再検証中。
+- 公開サイト用の独立設定playwright.live.config.ts/tests/live/smoke.spec.tsを追加。EXPECTED_COMMITの一致、合成PDFのオフライン再起動/筆記保存/二形式出力、外部通信と404なし、画像記録を確認する。公開成功後にDocker内で実行する。
+
+### HTTPS初回公開とUI関連検証
+
+main run34195652006はverify/deployともsuccess、2026-09-08 06:42:28 UTC完了。https://tehutahu.github.io/my-note-app/ の版72148fb（PWA hash0e8cad383bd7238a）へ実ブラウザーで到達した。`HTTPS-live.log`1成功（22.5秒）：合成PDF、通信OFF再起動、筆記/保存/二形式出力、404/外部通信/POST等0。写真はartifacts/https-library.png、https-editor.png。初回editor画像は再描画途中だったためPDF表示完了待ちを加えて`HTTPS-live-2.log`へ再実行中。ユーザーの実機Hは未回答。
+
+`UI-final-e2e.log`はダイアログ試験前にdisabledな旧画面ボタンへfocus/Enterを送る試験同期不足で7成功/1timeout。toBeEnabled待ちを加え`UI-final-e2e-2.log`8成功（43.9秒、retry0）。Tab/Shift+Tab循環、Escape閉鎖、起点ボタンへのfocus復帰が成功。`UI-verified-check.log`npm test48成功/check終了0。PR化してCI/公開へ反映する。
+
+`HTTPS-live-2.log`も1成功（19.8秒）。最終再起動後のPDF表示完了を待って画像を保存済み。`UI-final-unit.log`48成功。実行中の検証なし。

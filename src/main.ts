@@ -70,6 +70,13 @@ if (!repository) {
           dialog.innerHTML = '<h2 id="delete-heading">完全に削除しますか？</h2><p id="delete-target"></p><p>この操作は元に戻せません。フォルダの場合は中の項目も削除します。</p><button id="cancel-delete" autofocus>キャンセル</button><button id="confirm-delete">完全に削除する</button><p role="alert" id="delete-error"></p>';
           dialog.querySelector('#delete-target')!.textContent = name;
           document.body.append(dialog); dialog.showModal();
+          dialog.addEventListener('keydown', event => {
+            if (event.key !== 'Tab') return;
+            const buttons = [...dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+            const first = buttons[0], last = buttons[buttons.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+          });
           dialog.onclose = () => dialog.remove();
           dialog.querySelector<HTMLButtonElement>('#cancel-delete')!.onclick = () => dialog.close();
           const confirm = dialog.querySelector<HTMLButtonElement>('#confirm-delete')!;
