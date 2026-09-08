@@ -275,3 +275,9 @@ main run34195652006はverify/deployともsuccess、2026-09-08 06:42:28 UTC完了
 `UI-final-e2e.log`はダイアログ試験前にdisabledな旧画面ボタンへfocus/Enterを送る試験同期不足で7成功/1timeout。toBeEnabled待ちを加え`UI-final-e2e-2.log`8成功（43.9秒、retry0）。Tab/Shift+Tab循環、Escape閉鎖、起点ボタンへのfocus復帰が成功。`UI-verified-check.log`npm test48成功/check終了0。PR化してCI/公開へ反映する。
 
 `HTTPS-live-2.log`も1成功（19.8秒）。最終再起動後のPDF表示完了を待って画像を保存済み。`UI-final-unit.log`48成功。実行中の検証なし。
+
+### PR #3 CIの一覧測定の同期
+
+run34232383303は35成功/1失敗。320px試験の「一覧へ戻る」直後、旧エディターのcontrols.all()の添字を非同期に追い、一覧再描画後にnth(11)が消えてtimeout。`CI-ui-failure.log`を記録。戻り先見出しを待ち、サイズ計測はevaluateAllの同じ瞬間のsnapshotに変更。`UI-ci-sync-green.log`6成功、`UI-ci-sync-unit.log`49成功（並行して作業中のbackup追加1件含む）。試験の同期修正のみをPR #3へ反映する。
+
+独立したXFER作業はまだ未コミット。`XFER-boundary-red.log`で20MiB PDFのbase64正規表現がMaximum call stack size exceeded。正規形と長さ/atob/btoaによる検査へ修正し、`XFER-boundaries-all.log`20MiB・添付64MiB・1000ページ・200万点・UTF-8 100MiBの許容境界と超過の5試験成功（11.36秒）。`XFER-boundary-check.log`49テスト/check成功。PR #3のCI合格後に別ブランチへ持ち越し、実ブラウザー復元/不正fixture/取り込み原子性の残件を継続する。

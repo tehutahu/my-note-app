@@ -4,9 +4,10 @@ import { PDFDocument } from 'pdf-lib';
 async function layout(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
   const controls = page.locator('button:visible, input:visible, select:visible');
-  for (const control of await controls.all()) {
-    const box = (await control.boundingBox())!;
-    expect(box.width, await control.evaluate(el => el.outerHTML)).toBeGreaterThanOrEqual(44);
+  const boxes = await controls.evaluateAll(nodes => nodes.map(el => ({ html: el.outerHTML, x: el.getBoundingClientRect().x, width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height })));
+  expect(boxes.length).toBeGreaterThan(0);
+  for (const box of boxes) {
+    expect(box.width, box.html).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.x).toBeGreaterThanOrEqual(-1);
     expect(box.x + box.width).toBeLessThanOrEqual((page.viewportSize()!.width) + 1);
@@ -23,6 +24,7 @@ for (const [width, height] of [[320, 740], [412, 915], [800, 1280], [1280, 800]]
     await expect(page.getByTestId('save-status')).toHaveText('保存済み');
     await layout(page);
     await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'ノート一覧', exact: true })).toBeVisible();
     await layout(page);
   });
 }
