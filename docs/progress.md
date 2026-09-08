@@ -237,3 +237,25 @@ UID修正後のCI run34167346309はcheckまで成功し、E2E28成功/1失敗。
 - 画面遷移と整理操作をwithViewLockで囲み、旧controlsをdisabled、mainをinert/aria-busyにする。完了/失敗時に解除し、処理中のPWA更新も拒否する。旧ノートcanvasへの入力も停止する。
 - `NOTE-navigation-green.log`関連4E2E成功（9.6秒）：元のフォルダ操作、遅延中の旧画面停止、競合コピー、PWA更新。固定sleep/retry追加なし。
 - 変更後npm test/checkを`NOTE-navigation-final-unit.log`/`NOTE-navigation-final-check.log`へ実行中。PR #1へ反映しCIを再確認する。目標全体は継続。
+
+## CI成功・統合承認待ち（下記の再開で解消）
+
+- PR #1のhead b7d227df195d21ca166a07d3267ed249b50651c3でCI成功。push run34192175731（2m13s）、PR run34192178411（2m14s）ともsuccess。
+- GitHubの新規環境でimage build→frozen install→npm test47成功→check成功→E2E30成功（1.4分、retry 0）。証拠`artifacts/CI-migration-success.log`。ローカルの`NOTE-navigation-final-unit.log`/`NOTE-navigation-final-check.log`も成功。
+- `gh pr merge 1 --squash --delete-branch --match-head-commit b7d227df195d21ca166a07d3267ed249b50651c3`は自動承認レビューに拒否された。理由は「PRをsquash mergeしてmainへ統合しブランチを削除する外部状態変更で、CI成功だけではユーザーの明示的な統合承認になりません」。操作は未実行。回避は行わず、検証済みPRの統合とブランチ削除をユーザーへ確認する。
+- 実行中の検証なし。goalは未完了で継続。承認後はPR head/CI状態を再確認して統合する。独立した残件はPWA subpath/Pages準備、PDF/XFER境界・互換性、UI/診断性能、最終3回・Firefox・全受入/H監査。
+- 公開HTTPSは未設定。先のGit/GitHub不可という障害は解消しており、現在の統合待ちは自動承認レビューによる明示承認要件。
+
+## 2026-09-08 統合承認・PWA配布
+
+- ユーザーが「ブランチの作成やマージ取り込み操作は全て承認を待たずやってよい」と明示承認。以後このGit操作の再確認は不要。PR #1を検証済みhead指定でsquash mergeし、mainのb946599を取り込み済み。ローカルの未コミット進捗は一時stashから復元して保持した。
+- 新ブランチfeat/pwa-distribution。PWAのworkerだけを変えた時に版/cache名が変わらない問題を修正。生成スクリプト自身もhashへ含め、旧版cacheと更新版cacheを分ける。`PWA-build-red.log`同一versionの期待不一致（終了1）→`PWA-build-green.log`48テスト成功。
+- 配布commit短縮値をworkerのSTATUSに含め画面に表示。未指定のローカルbuildは「ローカル」。`PWA-commit-red.log`commit欠落の期待不一致（終了1）。最終npm test/checkは`PWA-final-unit.log`/`PWA-final-check.log`へ実行。
+- PWA-04専用Playwright設定・回帰試験を追加。最初の設定はdefineConfigのwebServer結合で2サーバーが起動しEADDRINUSE、設定修正後`PWA-subpath-2.log`1成功（21.1秒、retry0）。既存サブパス機能の回帰確認であり、製品の未実装REDとはしていない。205アセット/manifest/icon/scope、PDF直リンク、offline再起動・筆記保存、外部通信/書込み要求/404なし、無関係cache保持を確認。
+- CIにsubpath build/testとmain成功後のPages配信を追加中。配布対象はテスト済みdistのみ。HTTPS到達はまだ未確認。全A、PDF/XFER境界、UI/性能、Firefox/3回安定性、Hは引き続き未完了。
+
+### PWA配布の最終ローカル検証
+
+`PWA-final-unit.log`/`PWA-final-check.log`の初回は試験用commitが39文字のため「ローカル」と判定され1失敗。fixtureを40文字へ修正し、`PWA-final-verified.log`でnpm test48成功、check全成功（終了0）。入力値検査は緩めていない。現在`PWA-final-e2e.log`で既存PWA3件とsubpath1件を再検証中。
+
+`PWA-final-e2e.log`は既存PWA3件成功（9.7秒）＋subpath1件成功（6.2秒）、いずれもretry0/終了0。公開前の関連検証完了。CIへ反映し、全体E2Eを新規runnerで確認する。
