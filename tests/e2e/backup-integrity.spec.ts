@@ -29,6 +29,21 @@ function logical(backup: Backup) {
 async function importFile(page: Page, backup: Backup) {
   await page.getByLabel('バックアップを読み込む', { exact: true }).setInputFiles({ name: 'roundtrip.snote', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
 }
+async function storedLibrary(page: Page) {
+  return page.evaluate(async () => {
+    const request = indexedDB.open('my-note-app');
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    try {
+      const names = ['folders', 'notebooks', 'pages', 'attachments'];
+      const tx = db.transaction(names, 'readonly');
+      const done = new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error); });
+      const records = await Promise.all(names.map(name => new Promise<unknown[]>((resolve, reject) => { const get = tx.objectStore(name).getAll(); get.onsuccess = () => resolve(get.result); get.onerror = () => reject(get.error); })));
+      await done;
+      const attachments = await Promise.all((records[3] as Array<{ blob: Blob }>).map(async a => ({ ...a, blob: Array.from(new Uint8Array(await a.blob.arrayBuffer())) })));
+      return { folders: records[0], notebooks: records[1], pages: records[2], attachments };
+    } finally { db.close(); }
+  });
+}
 test('XFER-03 20MiB PDF backup is restored and renders with the original hash', async ({ page }) => {
   test.setTimeout(90000);
   const backup = await fixture(20 * 1024 * 1024), path = '/workspace/artifacts/backup-20m.snote';
@@ -95,7 +110,9 @@ test('XFER-01 PDF and three folder levels survive isolated-storage roundtrip and
 test('XFER-03 invalid reference, hash, base64, version and PDF fixtures leave the database unchanged', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
   await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
-  const before = await exportFile(page), source = await fixture();
+  const source = await fixture(); await importFile(page, source);
+  await expect(page.getByRole('button', { name: 'PDFバックアップ', exact: true })).toHaveCount(1);
+  const before = await storedLibrary(page);
   const cases: Array<[string, (backup: Backup) => void]> = [
     ['形式', b => { Object.assign(b, { format: 'other' }); }],
     ['バージョン', b => { Object.assign(b, { schemaVersion: 2 }); }],
@@ -113,14 +130,16 @@ test('XFER-03 invalid reference, hash, base64, version and PDF fixtures leave th
     const bad = structuredClone(source); mutate(bad); await importFile(page, bad);
     await expect(page.getByRole('alert')).toContainText(reason);
     await expect(page.locator('#import-status')).toHaveText('取り込みに失敗しました');
-    expect(logical(await exportFile(page)), reason).toEqual(logical(before));
+    expect(await storedLibrary(page), reason).toEqual(before);
   }
 });
 
 test('XFER-04 abort and quota failure roll back the entire import, cancellation adds nothing', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
   await page.getByRole('button', { name: 'ノート一覧', exact: true }).click();
-  const before = await exportFile(page), source = await fixture();
+  const source = await fixture(); await importFile(page, source);
+  await expect(page.getByRole('button', { name: 'PDFバックアップ', exact: true })).toHaveCount(1);
+  const before = await storedLibrary(page);
   source.folders = [0, 1, 2].map(i => ({ id: id(10 + i), parentId: i ? id(9 + i) : null, name: `原子性${i}`, createdAt: source.exportedAt, updatedAt: source.exportedAt, deletedAt: null }));
   source.notebooks[0].folderId = id(12);
   for (const mode of ['abort', 'attachment-abort', 'quota']) {
@@ -138,7 +157,7 @@ test('XFER-04 abort and quota failure roll back the entire import, cancellation 
     await importFile(page, source);
     await expect(page.locator('#import-status')).toHaveText('取り込みに失敗しました');
     await expect(page.getByRole('alert')).toContainText(mode === 'quota' ? '容量' : '取り込み');
-    expect(logical(await exportFile(page)), mode).toEqual(logical(before));
+    expect(await storedLibrary(page), mode).toEqual(before);
   }
   await page.evaluate(() => {
     const digest = crypto.subtle.digest.bind(crypto.subtle);
@@ -155,5 +174,5 @@ test('XFER-04 abort and quota failure roll back the entire import, cancellation 
   await expect(page.locator('#import-status')).toHaveText('キャンセルしました');
   await page.evaluate(() => { (window as unknown as { releaseHash: () => void }).releaseHash(); });
   await expect(page.getByLabel('バックアップを読み込む', { exact: true })).toBeEnabled();
-  expect(logical(await exportFile(page))).toEqual(logical(before));
+  expect(await storedLibrary(page)).toEqual(before);
 });

@@ -297,3 +297,9 @@ run34232383303は35成功/1失敗。320px試験の「一覧へ戻る」直後、
 `XFER-all-e2e.log`41成功（2.5分、retry0、終了0）。不正fixture11種類、3階層/PDF往復、途中abort/容量不足/キャンセルも成功。最後のattachments store追加時にabortするケースと3階層追加をXFER-04へ補強し、`XFER-verified-check.log`npm test50成功/check終了0。`XFER-verified-e2e.log`で関連5件を再検証中。追加後にCIへ反映する。
 
 `XFER-verified-e2e.log`関連5成功（15.8秒、retry0、終了0）。実行中のローカル検証なし。
+
+## 2026-09-09 CIとFirefoxの再開
+
+PR #4（288767a）のCI run34234388906/34234375038は40成功/1失敗。11種類の不正fixture試験が連続exportの11回目でdownloadイベント待ちtimeout。データ保持の検証を、全4storeの同一transaction snapshotとPDF blobのbyte列の直接比較へ変更した。ブラウザーの連続ダウンロード制限が疑われるが断定はしない。書き出し自体は往復/20MiB試験で別途検証する。`CI-backup-failure.log`とダウンロードartifactを保存。`CI-backup-sync-check.log`npm test50成功/check成功、`CI-backup-sync-green.log`関連5成功（50.1秒）。既存fixtureもPDF付きにして原本保持まで比較している。
+
+Firefox初回`Firefox-first.log`は38成功/3失敗（5.0分）。3件とも移行fixture用manifestへのnavigateがDownload is startingで止まり、製品の移行処理には未到達。same-originのroute専用HTML準備ページへ変更し、`Firefox-migration-green.log`へ3件を実行中。firefox設定とmigrationテスト変更は未コミットで、PR #4修正とは別に扱う。PDF.jsのlegacy entryは既存コンテナのNode22/24でimport可能と確認、新規依存は導入していない。
