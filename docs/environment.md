@@ -46,3 +46,7 @@ appの`id`はuid=1000(node) gid=1000(node)と実測。
 ## PDF本番依存（2026-09-07）
 
 ユーザーの2件承認を受けてコンテナ内pnpmで導入。pdfjs-dist 6.3.289、pdf-lib 1.17.1をlockfileに固定。ライセンスとworker/font配布はM4の完了検証に含める。
+
+## CIの実行ユーザー（2026-09-08）
+
+Composeのapp/e2e/previewはAPP_UID/APP_GID（既定1000:1000）で実行する。GitHub Actionsではcheckout所有者のid -u/id -gを渡す。rootのinitは専用依存volumeの最上位のみ所有者を設定し、ホストのソースやホームの権限を変更しない。CI run 34167157743では固定1000のままrunner所有ディレクトリへartifactsを作れずEACCESになったため、この差を修正した。

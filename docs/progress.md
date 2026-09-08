@@ -197,3 +197,43 @@
 - GitHub公開リポジトリ `https://github.com/tehutahu/my-note-app` を作成し、`origin` に登録。`main` をpush済み。ローカルは `main...origin/main` で差分なし。
 - `dist/`、`artifacts/`、PDF、`.snote`、`.env*` は `.gitignore` により初回pushへ含めていない。
 - GitHub Actions/CIはpush直後で、成功結果は未確認。次回開始時は `gh auth status`、`git status --short --branch`、`gh run list --limit 5` を確認する。
+
+## 2026-09-08 DATA-04保存形式の移行
+
+- `DATA-migration-red.log`4失敗（schema2への移行、abort、blocked案内、未知schema拒否の未実装）から開始。
+- IndexedDBをschema2へ移行。pages.byNotebook索引を非破壊で追加し、ノート読み込みで索引を使って取得後に保存済みpageIds順へ並べる。バックアップのschemaVersionは1のまま。ノート/ページ内容の変換や削除は行わない。
+- onblockedでは日本語で別タブを閉じる案内を出し、そのopen要求を放棄。後から接続が空いても勝手に移行せずabortする。versionchangeでは接続を閉じて画面へ案内。未知の新版は拒否し、DBを自動削除しない。
+- `DATA-migration-ui-red.log`2E2Eでgeneric起動エラーしか出ない期待不一致を確認し、mainへ具体的な日本語理由を接続。
+- 最初のcheckはstorage branches84.88%で閾値85%未達。versionchange通知と同期例外の取り消し試験を追加し、`DATA-migration-green-2.log`/`DATA-migration-check-2.log`成功。閾値は変更していない。
+- 実ブラウザーの旧接続blocked、versionchange途中abort、接続終了案内/未知新版拒否を含めた全E2Eを`DATA-migration-ui-green.log`へ実行中。未実行項目を合格にはしていない。
+
+### DATA-04全体E2Eの初回結果
+
+`DATA-migration-ui-green.log`は28成功/1失敗（約2分）。移行案内のテストでrole=alertが通知と空のlibrary-errorの2件に一致したためstrict locator失敗。画面には意図した案内が出ていた。対象を保存接続の通知に限定してテストを修正。アプリの移行/保存コードはこの修正では変更していない。`DATA-migration-final-unit.log`成功、final-check実行中。その後、移行関連3E2Eを再確認する。
+
+### DATA-04の検証結果と環境再確認
+
+`DATA-migration-ui-green-2.log`移行関連3E2E成功（4.6秒、retry 0、終了0）。`DATA-migration-final-unit.log`47テスト成功、`DATA-migration-final-check.log`lint/型/coverage/build終了0（storage branches86.04%）。全体E2Eの初回は28成功/locator失敗1であり、全体29件の単一GREEN実行とは区別する。build版ID `b84e0af582b8ec35`。現在実行中の検証なし。
+
+`gh auth status`を再確認し、現在はtehutahuアカウントで認証成功。以前の「GitHub認証が無効」という障害記録は現在状態ではない。Gitディレクトリが実環境で利用可能かを読み取り再確認中。アクセス制限の変更や削除による回避は行わない。全体目標、残るPDF/XFER境界・PWA subpath/UI/性能・最終監査/Hは継続。
+
+### Git/GitHubの現在状態（以前の障害記録を更新）
+
+実環境への読み取りで有効なGitリポジトリを確認。mainはorigin/mainを追跡し、remoteはhttps://github.com/tehutahu/my-note-app.git。直近commitは5a8bf18（remote設定記録）。サンドボックス内の.gitの見え方を変更せず、許可されたgit/gh操作を実環境で行う。GitHub認証・ネットワークも利用可能。既存CI run 34166518019の失敗は、移行のREDテスト4件に対して実装前のmainだったため。今回の移行差分を機能ブランチ/PRにまとめてCIへ渡す。
+
+### PR #1 CIの権限修正
+
+PR https://github.com/tehutahu/my-note-app/pull/1 を作成。commit25d4211。CI run34167157743はcheckで `/workspace/artifacts` 作成EACCES（`CI-migration-failure.log`）。固定UID1000とrunnerのcheckout所有UIDが異なるため。ComposeにAPP_UID/APP_GID（既定1000）を追加し、CIでrunnerのIDを渡す修正を行う。非root要件は維持し、ソースのchmod/chownは行わない。現在のPRはCI未合格のため未統合。
+
+### CIでのNOTE-02テスト同期修正
+
+UID修正後のCI run34167346309はcheckまで成功し、E2E28成功/1失敗。NOTE-02が名前変更クリック直後にreloadし、非同期transactionのcommit前にページを破棄していた（`CI-migration-e2e-failure.log`）。保存後のlibrary再描画で更新される見出し「会議 / 確定」を待ってからreloadするように修正する。固定sleepやretry追加、受入基準緩和は行わない。CI権限問題は解消済み。
+
+## 2026-09-08 再開・フォルダ移動競合の根本修正
+
+- 前回は自動承認レビュー側の利用上限でDocker実行が拒否された。ユーザーの再開指示後、通常のDocker実行が可能になったことを確認し、同じテストから再開。
+- CI run34167658687は見出し待ちを加えてもNOTE-02が失敗。単なるcommit待ちだけでなく、移動中も旧フォルダの入力欄が操作できる競合があった。先の「reload前の待ちだけが原因」という記録は不十分だった。
+- `NOTE-navigation-red.log`でDB読み込みを保持し、移動中の旧入力欄がenabledのままである失敗を確認。
+- 画面遷移と整理操作をwithViewLockで囲み、旧controlsをdisabled、mainをinert/aria-busyにする。完了/失敗時に解除し、処理中のPWA更新も拒否する。旧ノートcanvasへの入力も停止する。
+- `NOTE-navigation-green.log`関連4E2E成功（9.6秒）：元のフォルダ操作、遅延中の旧画面停止、競合コピー、PWA更新。固定sleep/retry追加なし。
+- 変更後npm test/checkを`NOTE-navigation-final-unit.log`/`NOTE-navigation-final-check.log`へ実行中。PR #1へ反映しCIを再確認する。目標全体は継続。

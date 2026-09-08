@@ -39,3 +39,17 @@ test('DATA-04 新しいschemaを旧コードで開いてもDBを削除しない'
   await expect(Repository.open(name)).rejects.toThrow('新しい保存形式');
   const raw = await request(indexedDB.open(name)); expect(raw.version).toBe(3); expect(await request(raw.transaction('pages').objectStore('pages').count())).toBe(2); raw.close();
 });
+test('DATA-04 versionchangeで接続を閉じ案内callbackを通知し次の移行を妨げない', async () => {
+  for (const notify of [undefined, vi.fn()]) {
+    const name = crypto.randomUUID(), db = await Repository.open(name, notify);
+    const raw = await request(indexedDB.open(name,3));
+    if (notify) expect(notify).toHaveBeenCalledOnce();
+    await expect(db.list()).rejects.toThrow(); raw.close();
+  }
+});
+test('DATA-04 索引作成が同期例外でもversionchange全体を取り消す', async () => {
+  const name = crypto.randomUUID(), old = await legacy(name); old.close();
+  const spy = vi.spyOn(IDBObjectStore.prototype, 'createIndex').mockImplementation(() => { throw new DOMException('quota', 'QuotaExceededError'); });
+  try { await expect(Repository.open(name)).rejects.toThrow('更新'); } finally { spy.mockRestore(); }
+  const raw = await request(indexedDB.open(name)); expect(raw.version).toBe(1); expect(await request(raw.transaction('pages').objectStore('pages').count())).toBe(2); raw.close();
+});

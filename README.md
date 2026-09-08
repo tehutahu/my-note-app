@@ -35,4 +35,4 @@ docker compose up -d preview
 - [バックアップのレビュー手順](docs/reviews/R3-transfer.md)
 - [PDFのレビュー手順](docs/reviews/R4-pdf.md)
 
-自動テスト合格と実機確認合格は別に記録します。公開/CIは現在Git環境とGitHub認証の障害により未確認です。
+自動テスト合格と実機確認合格は別に記録します。Git/GitHubは利用可能になり、PRでコンテナCIを検証しています。HTTPS公開と実機確認はこれからです。

@@ -9,17 +9,33 @@ import { copyLibrary, decodeBackup } from './transfer/backup';
 import { exportPdf, importPdf, PdfRenderer } from './pdf/document';
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <header><span class="brand">てのひらノート</span><span class="version">試作 0.1.0</span></header><main><p role="status">ノートを読み込んでいます…</p></main>`;
+let pendingViews = 0;
 let canApplyUpdate = () => false;
-void registerPwa(() => canApplyUpdate());
+void registerPwa(() => pendingViews === 0 && canApplyUpdate());
 const main = document.querySelector('main')!;
-const repository = await Repository.open().catch(() => undefined);
+let openError = '端末内の保存領域を開けませんでした。ブラウザーのストレージ設定を確認してください。既存データは削除していません。';
+const repository = await Repository.open(undefined, () => {
+  const notice = document.createElement('p'); notice.setAttribute('role', 'alert'); notice.className = 'pwa-status';
+  notice.textContent = '別のタブで保存形式が更新されました。このタブの保存接続を閉じました。新しい版のアプリで開き直してください。';
+  document.querySelector('header')!.after(notice);
+}).catch(error => { if (error instanceof Error) openError = error.message; return undefined; });
 if (!repository) {
-  main.innerHTML = '<p role="alert">端末内の保存領域を開けませんでした。ブラウザーのストレージ設定を確認してください。既存データは削除していません。</p>';
+  main.innerHTML = '<p role="alert"></p>'; main.querySelector('p')!.textContent = openError;
 } else {
   const db = repository;
+  const withViewLock = async <T>(action: () => Promise<T>): Promise<T> => {
+    const controls = [...main.querySelectorAll<HTMLButtonElement | HTMLInputElement | HTMLSelectElement>('button, input, select')].map(control => ({ control, disabled: control.disabled }));
+    for (const { control } of controls) control.disabled = true;
+    pendingViews++; main.inert = true; main.setAttribute('aria-busy', 'true');
+    try { return await action(); }
+    finally {
+      for (const { control, disabled } of controls) if (control.isConnected) control.disabled = disabled;
+      if (--pendingViews === 0) { main.inert = false; main.removeAttribute('aria-busy'); }
+    }
+  };
   let currentFolder: string | null = new URLSearchParams(location.hash.slice(1)).get('folder');
   let dispose: (() => void) | undefined;
-  const open = async (id: string) => {
+  const open = (id: string) => withViewLock(async () => {
     const snapshot = await db.load(id);
     if (!snapshot || snapshot.notebook.deletedAt) throw new Error('ノートが見つかりません。ゴミ箱も確認してください');
     currentFolder = snapshot.notebook.folderId;
@@ -33,8 +49,8 @@ if (!repository) {
       downloadBlob(new Blob([await exportPdf(session.snapshot, library.attachments)], { type: 'application/pdf' }), 'note.pdf');
     }, async () => { await open(await saveConflictCopy(db, session.snapshot)); });
     update = editor.update; dispose = editor.dispose; canApplyUpdate = editor.canUpdate; update();
-  };
-  const trashView = async () => {
+  });
+  const trashView = () => withViewLock(async () => {
     const [folders, notebooks] = await Promise.all([db.listFolders(), db.list()]);
     main.innerHTML = '<section class="library"><h1>ゴミ箱</h1><button id="close-trash">ノート一覧へ戻る</button><p>復元すると元の場所へ戻します。親フォルダがない場合はルートへ戻します。</p><div id="trash-items" class="notebooks"></div><p id="trash-error" role="alert"></p></section>';
     main.querySelector<HTMLButtonElement>('#close-trash')!.onclick = () => { void library(); };
@@ -66,8 +82,8 @@ if (!repository) {
         row.append(label, restore, purge); main.querySelector('#trash-items')!.append(row);
       }
     }
-  };
-  const library = async () => {
+  });
+  const library = () => withViewLock(async () => {
     canApplyUpdate = () => !main.querySelector('input:disabled, dialog[open]') && !document.querySelector('dialog[open]');
     dispose?.(); dispose = undefined;
     const [notebooks, allFolders] = await Promise.all([db.list(), db.listFolders()]);
@@ -77,7 +93,7 @@ if (!repository) {
     history.replaceState(null, '', currentFolder ? `#folder=${encodeURIComponent(currentFolder)}` : '#');
     main.innerHTML = `<section class="library"><p class="eyebrow">手書きの時間を、もっと自由に。</p><h1 id="folder-heading">ノート一覧</h1><button id="parent-folder">上のフォルダ</button><button id="new-note">ノートを作る</button><p class="notice">このブラウザーの中に保存します。別の端末には自動で同期されません。</p><form id="create-folder"><label>新しいフォルダ名 <input id="folder-name" maxlength="120" required></label><button>フォルダを作る</button></form><div id="current-folder-controls"></div><div id="folders" class="notebooks"></div><div id="notebooks" class="notebooks"></div><p role="alert" id="library-error"></p></section>`;
     const report = (error?: unknown) => { main.querySelector('#library-error')!.textContent = error instanceof Error ? error.message : '操作に失敗しました。もう一度お試しください。'; };
-    const perform = async (action: () => Promise<void>) => { try { await action(); await library(); } catch (error) { report(error); } };
+    const perform = async (action: () => Promise<void>) => { try { await withViewLock(async () => { await action(); await library(); }); } catch (error) { report(error); } };
     const pdfLabel = document.createElement('label'); pdfLabel.textContent = 'PDFを取り込む ';
     const pdfInput = document.createElement('input'); pdfInput.type = 'file'; pdfInput.accept = 'application/pdf,.pdf'; pdfLabel.append(pdfInput); main.querySelector('.library')!.append(pdfLabel);
     pdfInput.onchange = async () => {
@@ -159,7 +175,7 @@ if (!repository) {
         pages: [{ id: pageId, notebookId: id, widthPt: 595.28, heightPt: 841.89, background: { kind: 'plain', color: '#fffefb' }, elements: [], revision: 0 }] };
       try { await db.create(note); await open(id); } catch { report(); create.disabled = false; }
     };
-  };
+  });
   const id = new URLSearchParams(location.hash.slice(1)).get('note');
   try { if (id) await open(id); else await library(); }
   catch { await library(); main.querySelector('#library-error')!.textContent = '指定されたノートを開けませんでした。'; }

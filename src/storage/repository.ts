@@ -98,13 +98,29 @@ export class Repository {
       await request(store.put({ ...notebook, folderId, revision: revision + 1, updatedAt: new Date().toISOString() }));
     });
   }
-  private constructor(private db: IDBDatabase) { db.onversionchange = () => this.close(); }
-  static async open(name = 'my-note-app'): Promise<Repository> {
-    const operation = indexedDB.open(name, 1);
-    operation.onupgradeneeded = () => {
-      for (const store of ['notebooks', 'pages', 'folders', 'attachments', 'meta']) operation.result.createObjectStore(store, { keyPath: 'id' });
-    };
-    return new Repository(await request(operation));
+  private constructor(private db: IDBDatabase, changed: () => void) { db.onversionchange = () => { this.close(); changed(); }; }
+  static async open(name = 'my-note-app', changed: () => void = () => {}): Promise<Repository> {
+    const operation = indexedDB.open(name, 2);
+    let abandoned = false;
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      operation.onblocked = () => {
+        abandoned = true;
+        reject(new Error('別のタブが保存形式の更新を妨げています。このアプリの別のタブを閉じてから再起動してください。'));
+      };
+      operation.onupgradeneeded = event => {
+        const tx = operation.transaction!;
+        if (abandoned) { tx.abort(); return; }
+        try {
+          if (event.oldVersion < 1) for (const store of ['notebooks', 'pages', 'folders', 'attachments', 'meta']) operation.result.createObjectStore(store, { keyPath: 'id' });
+          if (event.oldVersion < 2) tx.objectStore('pages').createIndex('byNotebook', 'notebookId');
+        } catch { tx.abort(); }
+      };
+      operation.onsuccess = () => resolve(operation.result);
+      operation.onerror = () => reject(new Error(operation.error?.name === 'VersionError'
+        ? 'このタブより新しい保存形式です。新しい版のアプリで開き直してください。'
+        : '保存形式の更新に失敗しました。既存データは変更していません。再起動してお試しください。', { cause: operation.error }));
+    });
+    return new Repository(database, changed);
   }
   /** Only IDB requests may be awaited inside body, to keep the transaction alive. */
   private async transaction<T>(mode: IDBTransactionMode, body: (tx: IDBTransaction) => Promise<T>): Promise<T> {
@@ -128,7 +144,9 @@ export class Repository {
     return this.transaction('readonly', async tx => {
       const notebook = await request<Notebook | undefined>(tx.objectStore('notebooks').get(id));
       if (!notebook) return undefined;
-      const pages = await Promise.all(notebook.pageIds.map(id => request<Page>(tx.objectStore('pages').get(id))));
+      const stored = await request<Page[]>(tx.objectStore('pages').index('byNotebook').getAll(id));
+      const byId = new Map(stored.map(page => [page.id, page]));
+      const pages = notebook.pageIds.map(id => byId.get(id)!);
       return { notebook, pages };
     });
   }

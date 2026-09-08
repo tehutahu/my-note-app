@@ -3,13 +3,13 @@ services:
   init:
     image: node:22.23.2-bookworm-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5
     user: '0:0'
-    command: ['sh', '-c', 'chown 1000:1000 /dependencies /store']
+    command: ['sh', '-c', 'chown ${APP_UID:-1000}:${APP_GID:-1000} /dependencies /store']
     volumes:
       - dependencies:/dependencies
       - store:/store
   app:
     build: .
-    user: '1000:1000'
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
     working_dir: /workspace
     depends_on:
       init:
@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.e2e
-    user: '1000:1000'
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
     working_dir: /workspace
     depends_on:
       init:
@@ -37,7 +37,7 @@ services:
     command: ['sh', '-c', 'pnpm run build && pnpm run e2e']
   preview:
     build: .
-    user: '1000:1000'
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
     volumes:
       - ./dist:/workspace/dist:ro
       - ./scripts/serve.mjs:/workspace/serve.mjs:ro
