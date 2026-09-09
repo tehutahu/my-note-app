@@ -367,3 +367,5 @@ INK-matrix-first.logでcanvas外releaseが1筆保存される不一致を確認�
 PDF-shape-edge-red.logは長方形開始角の画素が背景になる不一致。PDFのline cap/joinをCanvasと同じRoundへ修正。PDF-shape-green.logは属性3形状×3幅×3色×3背景、PDF画素、蛍光ペンの再表示/200%/PDF色差、ゴミ箱2コピー/原本/復元を含む3件が両ブラウザー成功。ACCEPT-matrices-final-check.logとHTTPS-copy-live.logを実行中。
 
 ACCEPT-matrices-final-check.logは57テスト/check成功（終了0）。HTTPS-copy-live.logは公開9ed1e57で1成功（20.3秒、終了0）。入力とPDFの変更はこれから別PRで統合する。
+
+入力修正をc79d234でPR #10、PDF修正をa1398c2でPR #11（#10上のstack）へ送付。受入対応表の生成を追加中。ACCEPT-report-red.logで正常reportを変換できない不一致→ACCEPT-report-green.logで59テスト/check成功。実行証拠と全条項/H合格を分ける。ACCEPT-report-browsers.logで同じbuild154275e5f7380d6cのChromium/Firefox全体を実行中。

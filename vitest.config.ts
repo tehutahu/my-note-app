@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
+    reporters: ['default', 'json'], outputFile: { json: 'artifacts/unit-results.json' },
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     coverage: {
       provider: 'v8', reporter: ['text', 'json-summary'], reportsDirectory: 'artifacts/coverage',

@@ -12,7 +12,8 @@
     "build": "tsc --noEmit && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs",
     "test": "vitest run",
     "check": "eslint . && tsc --noEmit && vitest run --coverage && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "acceptance": "node --experimental-strip-types scripts/acceptance-results.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

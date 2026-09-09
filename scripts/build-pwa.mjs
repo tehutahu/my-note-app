@@ -32,6 +32,8 @@ async function files(dir) {
   }
   return result.sort();
 }
+const fullCommit = /^[a-f0-9]{40}$/.test(process.env.BUILD_COMMIT || '') ? process.env.BUILD_COMMIT : null;
+await writeFile('dist/build-info.json', JSON.stringify({ commit: fullCommit }) + '\n');
 const assets = await files('dist'), hash = createHash('sha256');
 const commit = /^[a-f0-9]{40}$/.test(process.env.BUILD_COMMIT || '') ? process.env.BUILD_COMMIT.slice(0, 7) : 'ローカル';
 hash.update(commit);
