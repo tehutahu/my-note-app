@@ -1,0 +1,4 @@
+services:
+  e2e:
+    cpus: 4
+    mem_limit: 8g

@@ -163,9 +163,9 @@ export class Repository {
       const notebooks = tx.objectStore('notebooks'), pages = tx.objectStore('pages');
       const current = await request<Notebook | undefined>(notebooks.get(snapshot.notebook.id));
       if (!current || current.revision !== expectedRevision) throw new ConflictError();
+      const owned = new Set(await request<IDBValidKey[]>(pages.index('byNotebook').getAllKeys(current.id)));
       for (const page of snapshot.pages) {
-        const existing = await request<Page | undefined>(pages.get(page.id));
-        if (existing && existing.notebookId !== current.id) throw new Error('別のノートのページは上書きできません');
+        if (!owned.has(page.id) && await request(pages.getKey(page.id)) !== undefined) throw new Error('別のノートのページは上書きできません');
         await request(pages.put(page));
       }
       for (const id of current.pageIds) if (!snapshot.notebook.pageIds.includes(id)) await request(pages.delete(id));

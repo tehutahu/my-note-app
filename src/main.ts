@@ -1,3 +1,5 @@
+import { installDiagnostics } from './diagnostics/ui';
+import { measure } from './diagnostics/runtime';
 import './style.css';
 import { registerPwa } from './pwa/register';
 import { openEditor } from './ui/editor';
@@ -9,6 +11,7 @@ import { copyLibrary, decodeBackup } from './transfer/backup';
 import { exportPdf, importPdf, PdfRenderer } from './pdf/document';
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <header><span class="brand">てのひらノート</span><span class="version">試作 0.1.0</span></header><main><p role="status">ノートを読み込んでいます…</p></main>`;
+installDiagnostics();
 let pendingViews = 0;
 let canApplyUpdate = () => false;
 void registerPwa(() => pendingViews === 0 && canApplyUpdate());
@@ -35,7 +38,7 @@ if (!repository) {
   };
   let currentFolder: string | null = new URLSearchParams(location.hash.slice(1)).get('folder');
   let dispose: (() => void) | undefined;
-  const open = (id: string) => withViewLock(async () => {
+  const open = (id: string) => measure('note-open', () => withViewLock(async () => {
     const snapshot = await db.load(id);
     if (!snapshot || snapshot.notebook.deletedAt) throw new Error('ノートが見つかりません。ゴミ箱も確認してください');
     currentFolder = snapshot.notebook.folderId;
@@ -46,10 +49,10 @@ if (!repository) {
     const renderer = new PdfRenderer(id => db.attachment(id));
     const editor = openEditor(main, session, () => { void library(); }, () => exportBackup(db, session.snapshot), renderer, async () => {
       const library = await db.snapshot();
-      downloadBlob(new Blob([await exportPdf(session.snapshot, library.attachments)], { type: 'application/pdf' }), 'note.pdf');
+      downloadBlob(new Blob([await measure('pdf-export', () => exportPdf(session.snapshot, library.attachments))], { type: 'application/pdf' }), 'note.pdf');
     }, async () => { await open(await saveConflictCopy(db, session.snapshot)); });
     update = editor.update; dispose = editor.dispose; canApplyUpdate = editor.canUpdate; update();
-  });
+  }));
   const trashView = () => withViewLock(async () => {
     const [folders, notebooks] = await Promise.all([db.listFolders(), db.list()]);
     main.innerHTML = '<section class="library"><h1>ゴミ箱</h1><button id="close-trash">ノート一覧へ戻る</button><p>復元すると元の場所へ戻します。親フォルダがない場合はルートへ戻します。</p><div id="trash-items" class="notebooks"></div><p id="trash-error" role="alert"></p></section>';
@@ -107,7 +110,7 @@ if (!repository) {
       const file = pdfInput.files?.[0]; if (!file) return;
       pdfInput.disabled = true;
       main.querySelector('#library-error')!.textContent = 'PDFを検証・取り込み中です…';
-      try { const imported = await importPdf(file, currentFolder); await db.importSnapshot(imported); await open(imported.notebooks[0].id); }
+      try { const imported = await measure('pdf-import', async () => { const imported = await importPdf(file, currentFolder); await db.importSnapshot(imported); return imported; }); await open(imported.notebooks[0].id); }
       catch (error) { report(error); pdfInput.disabled = false; pdfInput.value = ''; }
     };
     const transfer = document.createElement('section'); transfer.className = 'transfer';
