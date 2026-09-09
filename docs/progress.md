@@ -347,3 +347,13 @@ PERF-full-regression.logはChromium46成功（3.1分）/Firefox46成功（5.4分
 fix/backup-export-limitsでXFER-02の残件を修正。XFER-export-all-red.logは1001ページ/200万点+1/20MiB+1/64MiB+1がacceptedになり4期待不一致。読み込み可能上限を出力にも適用し、日本語の書き出し失敗・分割案内へ統一。Blob実サイズを使う。XFER-export-check.logはnpm test56/check成功、上限ちょうどの出力と超過拒否を含む境界6成功（20.39秒）。XFER-export-browser.logで画面の案内・既存データ保持・従来の往復を検証中。
 
 XFER-export-browser.logは上限超過の日本語案内/1001ページ保持＋既存バックアップの6試験成功（16.7秒、retry0）。PR #7統合後のmainは436f410。性能の再現用にgit archiveで/tmp/my-note-app-perf-436f410へ固定ソースを展開し、独立したdistで測定中。メイン作業のソース/ビルドとは分離した。次は書き出し修正のPRとCI、残る受入境界・対応表・最終3回。
+
+## 固定版再測定での未達と追加修正
+
+PERF-fixed-436f410.log（固定ソース、版表示ローカル）は3成功。BUILD_COMMITを40桁に修正したPERF-fixed-labeled.log（PWA7fa3088a2c0f24ae /436f410）はSの保存開始最大322.40msで300msを超え、1失敗/2成功。保存commit中央値549.30msは基準内。生値をPERF-fixed-436f410-S/L/P.jsonへ保存。成功した前回だけを採用せずPERF-03は再修正扱い。
+
+fix/save-copy-latencyで、保存コピーをschema上の各可変フィールドの明示コピーへ変更。筆跡pointsを汎用serialization経由でコピーしない。背景/筆跡点/図形/PDF viewBox/ページID配列の独立性を回帰テストへ追加。PERF-copy-check.logは57 tests/check成功。現在PERF-copy-targets.logで4CPU/8GiBの性能を再測定中。
+
+独立して追加した未コミットtests/e2e/input-acceptance.spec.tsはINK-matrix-first.logで2失敗。100本/10点/100履歴までは成功、消しゴムのクリックがviewport外だった試験準備を修正予定。もう1件はcanvas外でreleaseした途中線が保存されるINK-05不一致で、性能修正と分けて対応する。現時点で未解決。
+
+PERF-copy-targets.logはS/L/P3成功（1.1分）。Sの保存開始中央値17.55ms/最大36.80ms、commit中央値293.60ms、入力p95 0.30ms、失敗0。独立した深いコピーを保ちながら汎用serializationを省いた。PERF-copy-browser.logで保存・競合・診断をChromium/Firefoxで検証中。PR #8のpush/PR CIも合格し統合した。残るINK-05領域外解放の修正と入力/属性/移行/ゴミ箱の受入補強は別ブランチで続ける。

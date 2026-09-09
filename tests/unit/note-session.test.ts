@@ -49,3 +49,20 @@ it('PERF save timing includes queued edits and reports a failed commit', async (
     expect(session.status).toBe('failed');
   } finally { measurements.stop(); clock.mockRestore(); }
 });
+
+it('DATA-02 editor mutations cannot alter the queued save snapshot or its nested values', async () => {
+  const next = fixture(); next.pages[0].elements = [
+    { id: 'ink', type: 'stroke', tool: 'pen', color: '#123456', widthPt: 3, points: [{ x: 5, y: 7, p: .8 }] },
+    { id: 'shape', type: 'shape', kind: 'line', color: '#123456', widthPt: 3, x1: 1, y1: 2, x2: 3, y2: 4 },
+  ];
+  next.pages[0].pdfSource = { attachmentId: 'pdf', pageIndex: 0, rotation: 90, viewBox: [1, 2, 3, 4] };
+  const original = structuredClone(next), writer = vi.fn(async () => {}), session = new NoteSession(fixture(), writer);
+  session.edit(next);
+  next.notebook.pageIds.push('foreign'); next.pages[0].background.color = '#ffffff';
+  const stroke = next.pages[0].elements[0]; if (stroke.type === 'stroke') stroke.points[0].x = 999;
+  const shape = next.pages[0].elements[1]; if (shape.type === 'shape') shape.x1 = 999;
+  next.pages[0].pdfSource.viewBox[0] = 999;
+  await session.flush();
+  expect(session.snapshot.pages).toEqual(original.pages);
+  expect(session.snapshot.notebook.pageIds).toEqual(original.notebook.pageIds);
+});
