@@ -251,6 +251,10 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   canvas.onpointerup = event => {
     releaseBarrel(event);
     if (event.pointerId === gestures.owner && gestures.mode === 'drawing') {
+      const rect = canvas.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX >= rect.right || event.clientY < rect.top || event.clientY >= rect.bottom) {
+        cancel(); return;
+      }
       if (active) {
         const end = point(event);
         if (active.type === 'stroke') {
