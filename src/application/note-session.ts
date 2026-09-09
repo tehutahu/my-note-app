@@ -1,3 +1,4 @@
+import { cloneNote } from './clone-note';
 import { beginMeasurement } from '../diagnostics/runtime';
 import type { NoteSnapshot } from '../domain/notebook';
 export type SaveStatus = 'saved' | 'saving' | 'failed';
@@ -13,7 +14,7 @@ export class NoteSession {
   }
   edit(next: NoteSnapshot, startedAt = performance.now()): void {
     this.editedAt ??= startedAt;
-    this.snapshot = structuredClone(next); this.dirty = true;
+    this.snapshot = cloneNote(next); this.dirty = true;
     if (this.status !== 'failed') this.start();
     this.changed();
   }
