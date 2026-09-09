@@ -25,6 +25,12 @@ test('HTTPS review build opens and retains synthetic notes offline', async ({ pa
   await expect(page.getByTestId('save-status')).toHaveText('保存済み');
   await page.reload(); await expect(page.getByTestId('stroke-count')).toHaveText('1筆');
   await expect(page.getByTestId('pdf-status')).toHaveText('PDF表示済み');
+  for (const tool of ['eraser', 'pen']) {
+    await canvas.dispatchEvent('pointerdown', { pointerType: 'pen', pointerId: 90, button: 2, buttons: 2 });
+    await canvas.dispatchEvent('pointerup', { pointerType: 'pen', pointerId: 90, button: 2, buttons: 0 });
+    await expect(page.locator(`[data-tool=${tool}]`)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('stroke-count')).toHaveText('1筆');
+  }
   for (const name of ['PDFを書き出す', 'このノートを書き出す']) {
     const event = page.waitForEvent('download'); await page.getByRole('button', { name, exact: true }).click();
     expect((await event).suggestedFilename()).toMatch(/\.(pdf|snote)$/);

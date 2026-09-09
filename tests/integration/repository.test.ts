@@ -127,3 +127,17 @@ it('XFER-02/04 ライブラリーsnapshotと一括追加、重複時は全追加
   await expect(destination.importSnapshot(collision)).rejects.toThrow();
   expect(await destination.listFolders()).toEqual([]); expect(await destination.snapshot()).toEqual(snapshot);
 });
+
+it('DATA-03 indexed ownership check accepts new pages and atomically rejects another notebook page', async () => {
+  const db = await open(); await db.create(fixture());
+  const other = fixture(); other.notebook.id = 'other'; other.notebook.pageIds = ['foreign']; other.pages[0].id = 'foreign'; other.pages[0].notebookId = 'other';
+  await db.create(other);
+  const next = fixture(); next.notebook.revision = 1;
+  next.notebook.pageIds.push('new'); next.pages.push({ ...next.pages[0], id: 'new' });
+  await db.save(next, 0); expect(await db.load('n1')).toEqual(next);
+  const before = await db.snapshot();
+  const bad = structuredClone(next); bad.notebook.revision = 2; bad.pages[0].background.kind = 'grid';
+  bad.notebook.pageIds.push('foreign'); bad.pages.push({ ...next.pages[0], id: 'foreign' });
+  await expect(db.save(bad, 1)).rejects.toThrow('別のノート');
+  expect(await db.snapshot()).toEqual(before);
+});

@@ -1,21 +1,19 @@
 # 進捗と再開地点
 
-更新日：2026-09-07
+更新日：2026-09-09
 
-## 現在の状態
+## 現在の状態（先頭は最新、以下の追記は作業履歴）
 
-**M0環境とM1筆記の基本、M2の保存・複数ページ・背景・図形・蛍光ペンまで接続。全体の実装完了・実機合格ではない。**
+**M0〜M5の主要機能を実装しHTTPS公開済み。全A/全Hの達成は未完了。**
 
-| 工程 | 実装 | 自動検証 | ユーザー確認 |
-| --- | --- | --- | --- |
-| M0 環境 | 固定Docker/Compose/lockfile/CI定義あり | 空volume再現成功。mount監査未完了、CI未実行 | 対象外 |
-| M1 ペン | ペン、筆圧、消しゴム、100操作Undo/Redo、指移動/ピンチ、指書き、ズーム | 基本のunit/E2E成功、定量入力と性能は残る | 未実施 |
-| M2 保存・整理 | 保存・複数ページ・背景・図形・蛍光ペンを実装、フォルダ/ゴミ箱は未着手 | NOTE-01 A、DATA-01 Aと機能別の部分検証成功 | 未実施 |
-| M3 受け渡し | 未着手 | 未実施 | 未実施 |
-| M4 PDF | 未着手、依存承認済み | 未実施 | 未実施 |
-| M5 PWA・統合 | 未着手 | 未実施 | 未実施 |
+- 公開URL：https://tehutahu.github.io/my-note-app/ 。公開確認済みcommit735fe93。PR #1〜#6統合済み、main run34319761380のverify/deploy成功。側面スイッチ・offline筆記保存/出力も公開サイトで確認（HTTPS-switch-live.log）。
+- ペン/消しゴム/Undo/Redo/指移動・ズーム/図形/蛍光ペン、ノート/ページ/フォルダ/ゴミ箱、保存失敗・競合救出、専用形式、PDF、PWA更新/subpathを実装。PDF.js/pdf-libは承認済み・導入済み。
+- Tab S7+／S23 Ultraの従来R1は「問題ない、書き心地もよい」と返答。数値/OS/browser/buildは未回答。追加した側面スイッチの実機確認を依頼中。他のHの代用にはしない。
+- 現在feat/performance-diagnostics。診断UI/計測/合成S/L/Pと保存・再描画最適化は作業中・未公開。PERF-03の初回未達（保存開始中央値568.55ms、commit2904.05ms）から改善し再測定中。PERF-optimized-check-2.logは56 tests/check成功。
+- 残り：PERF正式値、全受入対応表と不足境界、最終同一build3回、最終空volume再現、Windows/端末間共有/PDF外部viewer/オフライン等のH。未実施を合格にしない。
+- git/gh/Dockerは利用可能。Node/npm/pnpm/ブラウザー実行は全てコンテナ内。ブランチ作成/取り込み/マージはユーザーが包括承認済み。新規本番依存はこの追加機能では導入していない。
 
-## 授権と環境の障害
+## 初期の授権・障害記録（以下は履歴、現在は上記を参照）
 
 - **PDF.js (`pdfjs-dist`) と `pdf-lib` の本番依存追加はユーザーが2件とも承認済み。再確認不要。** まだ未導入。バージョンはコンテナ内で導入時に固定する。
 - TDD・コンテナ利用はユーザー指定。ホストのNode/npm/pnpm/ブラウザーは使用していない。
@@ -320,3 +318,24 @@ Firefox初回`Firefox-first.log`は38成功/3失敗（5.0分）。3件とも移�
 追加要望：S Penの側面スイッチでペンと消しゴムを切り替える。押すたびに選択を切り替え、離しても維持する。penのsecondary buttonのみ対象にし、マウス右ボタンは対象外。押し続けて繰り返し切り替えない。筆記途中の切り替えは未確定線を破棄する（INK-05）。追加機能の実機確認はこれから。
 
 Firefox全体は42成功/1失敗（Firefox-full-green.log、5.4分）。唯一の失敗は更新試験の初期オフライン準備が既定5秒を超えたことで、更新処理には未到達。既存PWA試験と同じ20秒の初期準備待ちに揃えて再実行する。PERF recorderの独立した未接続実装は保持（unit RED2件→GREEN52件）、性能達成とはしていない。
+
+## 2026-09-09 側面スイッチ統合と診断UI
+
+- PR #5は3c69519、PR #6は3da5c49でpush/PRのCI全成功。#5をmainへ統合し#6のbaseをmainへ変更、CLEAN/全check成功を確認して統合。mainは735fe93。公開run34319761380を監視中。側面スイッチはINK-switch-green.logでChromium7成功/Firefox3成功、INK-switch-final-check.logはnpm test52/check成功。実機スイッチは未確認。
+- feat/performance-diagnosticsへ移動、以前からの未コミット計測コードを保持。PERF-failures-red.logで生値の上限後に失敗総数が出ないことを確認し、総件数/総失敗数を分離。PERF-failures-green.log全53成功。
+- PERF-ui-red.logは動作の計測ボタンが存在せず1失敗。診断dialog、開始/停止/JSON、温度/省電力選択、メモリー上の上限付き記録、筆記/表示/保存/PDFへの計測接続を追加。PERF-ui-check.log53成功/check成功。PERF-ui-green.logは診断＋スイッチ＋保存6成功（30.9秒）。遅い保存のqueueを含める回帰試験を追加中。
+- 合成S/L/P fixture、4 CPU/8GiB Compose override、専用性能suiteを作成中。現時点でPERF数値合格とはしていない。実装/テスト/fixtureとも未コミット。次：npm test/check→playwright.performance.config.tsで実測→不足修正→通常/Firefox回帰→機能PR。全体目標の受入監査・最終3回・未回答Hは継続。
+
+### 公開確認と最初の性能測定
+
+main run34319761380はverify/deploy成功（5分55秒）。HTTPS-switch-live.logは735fe93の公開サイトで側面スイッチ・offline PDF再表示・筆記保存・二形式出力を確認、1成功（21.5秒）。ユーザーに両Androidの側面スイッチ確認を依頼済み。
+
+PERF-targets-first.logはcgroup cpu.max=400000 100000、memory.max=8589934592を確認。Sは1000move/1020イベント、保存10回。入力p95=0.30ms、保存開始中央値568.55ms、commit中央値2904.05msでPERF-03未達。生値をPERF-S-before-optimization.jsonへ保存。初回はHTTPS検証と一部時間帯が重なったため、改善後の正式測定は他の検証と分離して再実行する。重複snapshotコピーと全筆跡再描画を削減中。線の間引きや保存完了表示の前倒しは行わない。
+
+### 性能改善後の結果
+
+PERF-targets-optimized.logは4CPU/8GiBで単独実行、S/L/Pの3試験成功（1.1分、retry0）。build PWA hash0ea1a479dd0b4f0d、未コミット版。Sは1020イベント/10保存：入力p95 0.30ms、保存開始中央値200.55ms・最大215.60ms、commit中央値465.55ms、失敗0。Lはwarm10回のノート表示中央値96.35ms。Pは10回の取り込み中央値216.55ms、ページ表示中央値285.80ms、全ページ出力中央値41.70ms、失敗0。生値PERF-S/L/P.json。これはA条件での測定でありAndroid Hの性能を証明しない。コミット後の固定版でも計測を再現する。
+
+Lの初回はtraceから約2〜3秒×100回のfixture転送が準備時間を占有し、warm-up click中に全体timeoutしたと確認。ブラウザー内生成に変更して全体11.7秒で成功。Pの初回は20件の旧renderキャンセルを失敗に数えていた。現在ページのCanvas反映まで測り、obsolete renderを集計しない修正後に成功。
+
+PERF-optimized-check-2.logは56 tests/check成功。新規ページ/他ノート所有ページの途中rollbackを追加した。現在PERF-full-regression.logでChromium→Firefoxの全体を実行中。最適化の外観・消去・Undo・PDF・オフラインまで確認してPR化する。

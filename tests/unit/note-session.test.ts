@@ -30,3 +30,22 @@ it('DATA-02 失敗後は変更を保持し明示的再試行で回復する', as
   expect(session.status).toBe('saved'); expect(writer.mock.calls[1][0].notebook.title).toBe('失敗後の編集');
   expect(writer.mock.calls[1][1]).toBe(0); expect(changed).toHaveBeenCalled();
 });
+
+it('PERF save timing includes queued edits and reports a failed commit', async () => {
+  const { measurements, startMeasurements } = await import('../../src/diagnostics/runtime');
+  let now = 80; const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+  let commit!: () => void;
+  let writes = 0;
+  const session = new NoteSession(fixture(), async () => {
+    if (++writes === 1) await new Promise<void>(resolve => { commit = resolve; });
+    else throw new DOMException('容量不足', 'QuotaExceededError');
+  });
+  try {
+    startMeasurements(); now = 100; session.edit(edited('first'), 90);
+    now = 200; session.edit(edited('queued'), 180);
+    now = 400; commit(); await session.flush();
+    expect(measurements.report()['save-start'].samples.map(sample => sample.durationMs)).toEqual([10, 220]);
+    expect(measurements.report()['save-commit'].samples).toEqual([{ durationMs: 310, outcome: 'ok' }, { durationMs: 220, outcome: 'failed' }]);
+    expect(session.status).toBe('failed');
+  } finally { measurements.stop(); clock.mockRestore(); }
+});

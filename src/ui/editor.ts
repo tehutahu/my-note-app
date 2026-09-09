@@ -1,3 +1,4 @@
+import { beginMeasurement } from '../diagnostics/runtime';
 import { ConflictError } from '../storage/conflict';
 import { rasterPlan } from '../pdf/cache';
 import { toPage } from '../domain/coordinates';
@@ -59,12 +60,12 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   };
   const conflicted = () => session.error instanceof ConflictError;
   title.value = session.snapshot.notebook.title;
+  let inputStartedAt: number | undefined;
   const persist = () => {
-    const snapshot = structuredClone(session.snapshot);
-    snapshot.pages = history.current;
+    const snapshot = { notebook: { ...session.snapshot.notebook }, pages: history.current };
     snapshot.notebook.pageIds = history.current.map(page => page.id);
     snapshot.notebook.title = title.value.trim() || snapshot.notebook.title;
-    session.edit(snapshot);
+    session.edit(snapshot, inputStartedAt);
   };
   title.onchange = () => { title.value = title.value.trim() || session.snapshot.notebook.title; persist(); };
   const update = () => {
@@ -94,23 +95,33 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   const paint = (context: CanvasRenderingContext2D, stroke: PageElement, start = 0) => {
     context.save(); context.beginPath(); context.rect(0, 0, currentPage().widthPt, currentPage().heightPt); context.clip(); drawElement(context, stroke, start); context.restore();
   };
+  let rendered: { key: string; elements: PageElement[] } | undefined;
+  let pdfKey = '';
   const render = () => {
     if (!history.current.some(page => page.id === selected)) selected = history.current[0].id;
-    clear(base); drawBackground(base, currentPage(), !currentPage().pdfSource);
+    const page = currentPage(), elements = erased ?? page.elements;
+    const key = JSON.stringify([page.id, page.widthPt, page.heightPt, page.background, page.pdfSource, gestures.camera, rasterScale, canvas.width, canvas.height]);
+    const append = rendered?.key === key && rendered.elements.length <= elements.length && rendered.elements.every((element, index) => element === elements[index]);
+    if (!append) { clear(base); drawBackground(base, page, !page.pdfSource); }
+    for (let i = append ? rendered!.elements.length : 0; i < elements.length; i++) paint(base, elements[i]);
+    rendered = { key, elements };
+    if (pdfKey !== key) {
+    pdfKey = key;
     const pdfContext = pdfLayer.getContext('2d')!; clear(pdfContext);
-    const generation = ++renderGeneration, page = currentPage();
+    const generation = ++renderGeneration;
     const pdfStatus = main.querySelector('[data-testid=pdf-status]')!;
     pdfStatus.textContent = page.pdfSource ? 'PDF表示中…' : '';
     if (page.pdfSource) {
       const budget = Math.max(1024, 64 * 1024 * 1024 - canvas.width * canvas.height * 4 * 3);
+      const end = beginMeasurement('pdf-page');
       void pdfRenderer.render(page, gestures.camera.zoom * rasterScale, budget).then(bitmap => {
         if (generation !== renderGeneration) return;
-        pdfContext.drawImage(bitmap, 0, 0, page.widthPt, page.heightPt); pdfStatus.textContent = 'PDF表示済み';
-      }).catch(() => { if (generation === renderGeneration) pdfStatus.textContent = 'PDFを表示できませんでした'; });
+        pdfContext.drawImage(bitmap, 0, 0, page.widthPt, page.heightPt); pdfStatus.textContent = 'PDF表示済み'; end();
+      }).catch(() => { if (generation === renderGeneration) { pdfStatus.textContent = 'PDFを表示できませんでした'; end('failed'); } });
+    }
     }
     main.querySelector<HTMLSelectElement>('#background')!.value = currentPage().background.kind;
     main.querySelector<HTMLInputElement>('#background-color')!.value = currentPage().background.color;
-    for (const stroke of erased ?? currentPage().elements) paint(base, stroke);
     main.querySelector('[data-testid=stroke-count]')!.textContent = `${currentPage().elements.filter(e => e.type === 'stroke').length}筆`;
     main.querySelector('[data-testid=element-count]')!.textContent = `${currentPage().elements.length}要素`;
     const select = main.querySelector<HTMLSelectElement>('#page-select')!;
@@ -150,6 +161,7 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
   main.querySelector<HTMLSelectElement>('#background')!.onchange = changeBackground;
   main.querySelector<HTMLInputElement>('#background-color')!.onchange = changeBackground;
   const resize = () => {
+    rendered = undefined; pdfKey = '';
     const plan = rasterPlan(stage.clientWidth, stage.clientHeight, devicePixelRatio); rasterScale = plan.scale;
     for (const layer of [canvas, committed, pdfLayer]) {
       layer.style.width = `${stage.clientWidth}px`; layer.style.height = `${stage.clientHeight}px`;
@@ -252,6 +264,18 @@ export function openEditor(main: HTMLElement, session: NoteSession, back: () => 
     }
     gestures.up(event.pointerId);
   };
+  for (const name of ['onpointerdown', 'onpointermove', 'onpointerup'] as const) {
+    const handler = canvas[name]!;
+    canvas[name] = event => {
+      const drawing = gestures.mode === 'drawing' && event.pointerId === gestures.owner;
+      const starts = name === 'onpointerdown' && event.button === 0 && tool !== 'pan' && !space && (event.pointerType !== 'touch' || fingerInk);
+      inputStartedAt = performance.now();
+      const end = drawing || starts ? beginMeasurement('input-handler', inputStartedAt) : undefined;
+      try { handler.call(canvas, event); end?.(); }
+      catch (error) { end?.('failed'); throw error; }
+      finally { inputStartedAt = undefined; }
+    };
+  }
   canvas.onpointercancel = event => { releaseBarrel(event); if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
   canvas.onlostpointercapture = event => { releaseBarrel(event); if (event.pointerId === gestures.owner || gestures.mode === 'pinching') cancel(); };
   return { update, canUpdate: () => session.status === 'saved' && !active && !erased && title.value.trim() === session.snapshot.notebook.title && !pdfButton.disabled && !exportButton.disabled, dispose: () => { renderGeneration++; pdfRenderer.dispose(); observer.disconnect(); window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('pointerup', releaseBarrel); window.removeEventListener('pointercancel', releaseBarrel); } };
