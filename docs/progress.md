@@ -303,3 +303,20 @@ run34232383303は35成功/1失敗。320px試験の「一覧へ戻る」直後、
 PR #4（288767a）のCI run34234388906/34234375038は40成功/1失敗。11種類の不正fixture試験が連続exportの11回目でdownloadイベント待ちtimeout。データ保持の検証を、全4storeの同一transaction snapshotとPDF blobのbyte列の直接比較へ変更した。ブラウザーの連続ダウンロード制限が疑われるが断定はしない。書き出し自体は往復/20MiB試験で別途検証する。`CI-backup-failure.log`とダウンロードartifactを保存。`CI-backup-sync-check.log`npm test50成功/check成功、`CI-backup-sync-green.log`関連5成功（50.1秒）。既存fixtureもPDF付きにして原本保持まで比較している。
 
 Firefox初回`Firefox-first.log`は38成功/3失敗（5.0分）。3件とも移行fixture用manifestへのnavigateがDownload is startingで止まり、製品の移行処理には未到達。same-originのroute専用HTML準備ページへ変更し、`Firefox-migration-green.log`へ3件を実行中。firefox設定とmigrationテスト変更は未コミットで、PR #4修正とは別に扱う。PDF.jsのlegacy entryは既存コンテナのNode22/24でimport可能と確認、新規依存は導入していない。
+
+## 2026-09-09 PDF境界とFirefoxの統合試験
+
+- PR #4は851b944で両CI成功（34291061246/34291065204）。squash mergeしてmain dc26e7bを取得、test/pdf-boundaries-and-firefoxへ移動。ユーザーへ公開版でAndroid2台のR1実機確認をasyncで依頼済み、未回答。実装の待ち条件にはしない。
+- `Firefox-migration-green.log`3成功（1.1分）、同じHTML fixtureで`Chromium-migration-html.log`3成功（4.8秒）。この変更は製品の修正ではなく、manifestがFirefoxでdownloadになる試験準備の修正。
+- Node22/24の既存コンテナでpdfjs-dist/legacy/build/pdf.mjsを読み込み可能と確認。tests/fixtures/pdf.tsに個人情報のない固定PDF 1.4/Standard revision2の暗号化fixtureを作成。空パスワード/指定パスワードをPDF.jsが実際に復号して既知文字列を抽出でき、pdf-libは暗号化として拒否することを検証。
+- `PDF-boundaries-browser.log`2成功（16.5秒）。4回転の注釈PDF出力で元の文字抽出が一致。20MiBかつ100ページのPDFを許容、1byte超過/101ページ/破損/暗号化/空パスワード暗号化を拒否し、既存DBの4storeとPDF blob実SHA-256が不変。空パスワード暗号化はPDF.jsで開けてもpdf-libが拒否する処理器差のfixtureとしても検証した。未知のすべての非互換PDFに対する保証ではない。
+- 製品変更なしの回帰監査として追加したため、PDF試験を未実装REDから始めたとはしていない。`PDF-boundaries-check.log`npm test50/check成功、`PDF-final-unit.log`50成功。
+- CIへChromiumの後、同一distでFirefox全体試験を追加。現在`Firefox-full-green.log`で43件を実行中。全体結果が出るまで合格としない。次の実装はPERF診断UI/計測とS/L/P fixture、残る受入監査と最終3回。必要Hは未回答。
+
+## 2026-09-09 Android実機の返答と側面スイッチ追加
+
+ユーザーからTab S7+／S23 Ultraそれぞれ「問題ない、書き心地もよい」とR1への返答を受領。筆記・消しゴム・Undo・指2本拡大の依頼に対する定性的な肯定結果として記録する。OS、ブラウザー、画面の版番号、1〜5の数値は未回答であり補完しない。全H項目の合格とはしない。
+
+追加要望：S Penの側面スイッチでペンと消しゴムを切り替える。押すたびに選択を切り替え、離しても維持する。penのsecondary buttonのみ対象にし、マウス右ボタンは対象外。押し続けて繰り返し切り替えない。筆記途中の切り替えは未確定線を破棄する（INK-05）。追加機能の実機確認はこれから。
+
+Firefox全体は42成功/1失敗（Firefox-full-green.log、5.4分）。唯一の失敗は更新試験の初期オフライン準備が既定5秒を超えたことで、更新処理には未到達。既存PWA試験と同じ20秒の初期準備待ちに揃えて再実行する。PERF recorderの独立した未接続実装は保持（unit RED2件→GREEN52件）、性能達成とはしていない。
