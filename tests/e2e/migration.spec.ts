@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 async function seed(page: Page, hold: boolean) {
-  await page.goto('/manifest.webmanifest');
+  await page.route('**/__migration_fixture', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Migration fixture</title>' }), { times: 1 });
+  await page.goto('/__migration_fixture');
   await page.evaluate(async hold => {
     const op = indexedDB.open('my-note-app', 1);
     op.onupgradeneeded = () => { for (const name of ['folders','notebooks','pages','attachments','meta']) op.result.createObjectStore(name, { keyPath: 'id' }); };
