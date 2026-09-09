@@ -1,5 +1,5 @@
 import { CanvasCache } from './cache';
-import { PDFDocument, degrees, rgb } from 'pdf-lib';
+import { PDFDocument, degrees, rgb, LineCapStyle, LineJoinStyle, setLineJoin, pushGraphicsState, popGraphicsState } from 'pdf-lib';
 import * as pdfjs from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { NoteSnapshot, Page } from '../domain/notebook';
@@ -64,7 +64,9 @@ export async function exportPdf(note: NoteSnapshot, attachments: Attachment[]): 
       if (element.type === 'stroke') target.drawSvgPath(strokePath(element), { x: 0, y: page.heightPt, color: inkColor(element.color), opacity: element.tool === 'highlighter' ? .25 : 1 });
       else {
         const path = shapePoints(element).map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join('');
-        target.drawSvgPath(path, { x: 0, y: page.heightPt, borderColor: inkColor(element.color), borderWidth: element.widthPt });
+        target.pushOperators(pushGraphicsState(), setLineJoin(LineJoinStyle.Round));
+        target.drawSvgPath(path, { x: 0, y: page.heightPt, borderColor: inkColor(element.color), borderWidth: element.widthPt, borderLineCap: LineCapStyle.Round });
+        target.pushOperators(popGraphicsState());
       }
     }
   }

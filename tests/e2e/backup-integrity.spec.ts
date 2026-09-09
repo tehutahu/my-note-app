@@ -176,3 +176,46 @@ test('XFER-04 abort and quota failure roll back the entire import, cancellation 
   await expect(page.getByLabel('バックアップを読み込む', { exact: true })).toBeEnabled();
   expect(await storedLibrary(page)).toEqual(before);
 });
+
+test('XFER-02 trash folders, annotations and PDF survive repeated independent backup copies and restoration', async ({ page }) => {
+  const source = await fixture(), deletedAt = '2026-09-09T00:00:00.000Z';
+  source.folders = [
+    { id: id(4), parentId: null, name: '親', createdAt: source.exportedAt, updatedAt: source.exportedAt, deletedAt },
+    { id: id(5), parentId: id(4), name: '子', createdAt: source.exportedAt, updatedAt: source.exportedAt, deletedAt },
+  ];
+  source.notebooks[0].folderId = id(5); source.notebooks[0].deletedAt = deletedAt;
+  source.pages[0].elements = [{ id: id(6), type: 'stroke', tool: 'pen', color: '#123456', widthPt: 3, points: [{ x: 50, y: 60, p: .8 }] }];
+  await page.goto('/'); await importFile(page, source);
+  await expect.poll(async () => (await storedLibrary(page)).notebooks.length).toBe(1);
+  const before = await storedLibrary(page), backup = await exportFile(page);
+  expect(logical(backup)).toEqual(logical(source));
+  for (let i = 0; i < 2; i++) {
+    await importFile(page, backup);
+    await expect.poll(async () => (await storedLibrary(page)).notebooks.length).toBe(i + 2);
+  }
+  const after = await storedLibrary(page), getId = (row: unknown) => (row as { id: string }).id;
+  for (const name of ['folders', 'notebooks', 'pages', 'attachments'] as const) {
+    const ids = new Set(before[name].map(getId));
+    expect(after[name].filter(row => ids.has(getId(row)))).toEqual(before[name]);
+  }
+  const copied = await exportFile(page);
+  expect(copied.folders).toHaveLength(6); expect(copied.pages).toHaveLength(3); expect(copied.attachments).toHaveLength(3);
+  const allIds = [...copied.folders, ...copied.notebooks, ...copied.pages, ...copied.attachments, ...copied.pages.flatMap(p => p.elements)].map(getId);
+  expect(new Set(allIds).size).toBe(allIds.length);
+  expect(copied.folders.every(f => f.deletedAt === deletedAt)).toBe(true);
+  for (const note of copied.notebooks) {
+    expect(note.deletedAt).toBe(deletedAt);
+    const child = copied.folders.find(f => f.id === note.folderId)!;
+    expect(child.name).toBe('子'); expect(copied.folders.find(f => f.id === child.parentId)!.name).toBe('親');
+    const p = copied.pages.find(p => p.id === note.pageIds[0])!;
+    expect(p.notebookId).toBe(note.id); expect(p.elements).toHaveLength(1);
+    const attachment = copied.attachments.find(a => a.id === p.pdfSource!.attachmentId)!;
+    expect(attachment.sha256).toBe(source.attachments[0].sha256); expect(attachment.dataBase64).toBe(source.attachments[0].dataBase64);
+  }
+  await page.getByRole('button', { name: 'ゴミ箱を開く', exact: true }).click();
+  const restore = page.getByRole('button', { name: '復元: 親', exact: true }); await expect(restore).toHaveCount(3); await restore.first().click();
+  await page.getByRole('button', { name: 'ノート一覧へ戻る', exact: true }).click();
+  await page.getByRole('button', { name: 'フォルダ: 親', exact: true }).click(); await page.getByRole('button', { name: 'フォルダ: 子', exact: true }).click();
+  await page.getByRole('button', { name: 'PDFバックアップ', exact: true }).click();
+  await expect(page.getByTestId('pdf-status')).toHaveText('PDF表示済み'); await expect(page.getByTestId('stroke-count')).toHaveText('1筆');
+});

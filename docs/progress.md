@@ -357,3 +357,13 @@ fix/save-copy-latencyで、保存コピーをschema上の各可変フィール�
 独立して追加した未コミットtests/e2e/input-acceptance.spec.tsはINK-matrix-first.logで2失敗。100本/10点/100履歴までは成功、消しゴムのクリックがviewport外だった試験準備を修正予定。もう1件はcanvas外でreleaseした途中線が保存されるINK-05不一致で、性能修正と分けて対応する。現時点で未解決。
 
 PERF-copy-targets.logはS/L/P3成功（1.1分）。Sの保存開始中央値17.55ms/最大36.80ms、commit中央値293.60ms、入力p95 0.30ms、失敗0。独立した深いコピーを保ちながら汎用serializationを省いた。PERF-copy-browser.logで保存・競合・診断をChromium/Firefoxで検証中。PR #8のpush/PR CIも合格し統合した。残るINK-05領域外解放の修正と入力/属性/移行/ゴミ箱の受入補強は別ブランチで続ける。
+
+## 2026-09-10 入力/PDF受入の補強
+
+前日のcommit/pushは自動承認レビューが利用上限を理由に拒否。9/10に利用上限解除を確認し、同じ承認済み操作を再開した。保存高速コピーを809bc5eでPR #9へ送り、push/PR CI成功後に統合（main9ed1e57、run34401649883 verify/deploy成功）。
+
+INK-matrix-first.logでcanvas外releaseが1筆保存される不一致を確認し、領域外は未確定操作を破棄する修正。100本/10点/筆圧画素/100回Undo/Redoの試験は消去用クリックのviewport外座標を修正。INK-migration-matrix.logは入力5＋全store/Blob移行2の7件がChromium/Firefoxとも成功。
+
+PDF-shape-edge-red.logは長方形開始角の画素が背景になる不一致。PDFのline cap/joinをCanvasと同じRoundへ修正。PDF-shape-green.logは属性3形状×3幅×3色×3背景、PDF画素、蛍光ペンの再表示/200%/PDF色差、ゴミ箱2コピー/原本/復元を含む3件が両ブラウザー成功。ACCEPT-matrices-final-check.logとHTTPS-copy-live.logを実行中。
+
+ACCEPT-matrices-final-check.logは57テスト/check成功（終了0）。HTTPS-copy-live.logは公開9ed1e57で1成功（20.3秒、終了0）。入力とPDFの変更はこれから別PRで統合する。
