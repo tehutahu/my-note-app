@@ -17,6 +17,15 @@ export async function sha256(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join('');
 }
 export async function encodeBackup(library: LibrarySnapshot, scope: Backup['scope'] = 'library'): Promise<string> {
+  const limit = (condition: boolean, reason: string) => {
+    if (!condition) throw new Error(`バックアップを書き出せません: ${reason}。${scope === 'library' ? 'ノート単位で書き出してください' : 'ページ数・筆跡・PDFの容量を確認してください。PDF書き出しも利用できます'}`);
+  };
+  limit(library.pages.length <= 1000, '1000ページを超えます');
+  let points = 0;
+  for (const page of library.pages) for (const element of page.elements) if (element.type === 'stroke') points += element.points.length;
+  limit(points <= 2000000, '全体200万点を超えます');
+  limit(library.attachments.reduce((sum, attachment) => sum + attachment.blob.size, 0) <= 64 * MiB, '添付合計は64MiBまでです');
+  for (const attachment of library.attachments) limit(attachment.blob.size <= 20 * MiB, 'PDFは20MiBまでです');
   const attachments: Backup['attachments'] = [];
   for (const attachment of library.attachments) {
     const bytes = new Uint8Array(await attachment.blob.arrayBuffer());
@@ -25,7 +34,7 @@ export async function encodeBackup(library: LibrarySnapshot, scope: Backup['scop
     attachments.push({ id: attachment.id, mimeType: attachment.mimeType, size: bytes.length, sha256: await sha256(bytes), dataBase64: btoa(binary) });
   }
   const output = JSON.stringify({ ...library, format: 'my-note-app', schemaVersion: 1, scope, exportedAt: new Date().toISOString(), attachments });
-  requireValue(new TextEncoder().encode(output).length <= 100 * MiB, '100MiBを超えます。ノート単位で書き出してください');
+  limit(new TextEncoder().encode(output).length <= 100 * MiB, '100MiBを超えます');
   return output;
 }
 export async function decodeBackup(text: string): Promise<LibrarySnapshot> {
