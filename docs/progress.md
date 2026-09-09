@@ -339,3 +339,11 @@ PERF-targets-optimized.logは4CPU/8GiBで単独実行、S/L/Pの3試験成功（
 Lの初回はtraceから約2〜3秒×100回のfixture転送が準備時間を占有し、warm-up click中に全体timeoutしたと確認。ブラウザー内生成に変更して全体11.7秒で成功。Pの初回は20件の旧renderキャンセルを失敗に数えていた。現在ページのCanvas反映まで測り、obsolete renderを集計しない修正後に成功。
 
 PERF-optimized-check-2.logは56 tests/check成功。新規ページ/他ノート所有ページの途中rollbackを追加した。現在PERF-full-regression.logでChromium→Firefoxの全体を実行中。最適化の外観・消去・Undo・PDF・オフラインまで確認してPR化する。
+
+## 性能PR統合と書き出し上限の修正
+
+PERF-full-regression.logはChromium46成功（3.1分）/Firefox46成功（5.4分）、retry0。PR #7 head d5261cbのpush run34357156167/PR run34357210417はsuccess。セルフレビュー後にsquash merge済み。新しい公開runはこれから確認する。
+
+fix/backup-export-limitsでXFER-02の残件を修正。XFER-export-all-red.logは1001ページ/200万点+1/20MiB+1/64MiB+1がacceptedになり4期待不一致。読み込み可能上限を出力にも適用し、日本語の書き出し失敗・分割案内へ統一。Blob実サイズを使う。XFER-export-check.logはnpm test56/check成功、上限ちょうどの出力と超過拒否を含む境界6成功（20.39秒）。XFER-export-browser.logで画面の案内・既存データ保持・従来の往復を検証中。
+
+XFER-export-browser.logは上限超過の日本語案内/1001ページ保持＋既存バックアップの6試験成功（16.7秒、retry0）。PR #7統合後のmainは436f410。性能の再現用にgit archiveで/tmp/my-note-app-perf-436f410へ固定ソースを展開し、独立したdistで測定中。メイン作業のソース/ビルドとは分離した。次は書き出し修正のPRとCI、残る受入境界・対応表・最終3回。
