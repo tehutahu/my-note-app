@@ -93,6 +93,32 @@ test('PERF-02 L opens 10 warm notebooks without loading other notebook strokes',
   expect(data['note-open'].medianMs).toBeLessThanOrEqual(1500);
   expect(data['note-open'].totalFailures).toBe(0);
 });
+test('PERF-03 S continuous completed strokes begin queued saves within one second', async ({ page }) => {
+  await page.goto('/'); await expect(page.getByRole('heading', { name: 'ノート一覧', exact: true })).toBeVisible();
+  const note = fixtureNote(1, 1, 2000, 100, 100); await seed(page, note);
+  await page.goto(`/#note=${note.notebook.id}`); await page.reload();
+  await expect(page.getByTestId('element-count')).toHaveText('2100要素');
+  const box = (await page.locator('#ink').boundingBox())!; await page.mouse.click(box.x + 20, box.y + 20);
+  await expect(page.getByTestId('save-status')).toHaveText('保存済み'); await start(page);
+  await page.locator('#ink').evaluate(async el => {
+    const r = el.getBoundingClientRect();
+    for (let i = 0; i < 30; i++) {
+      for (const type of ['pointerdown', 'pointerup']) el.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, pointerId: 7, pointerType: 'pen', button: 0, buttons: type === 'pointerdown' ? 1 : 0,
+        pressure: .8, clientX: r.left + 40 + i, clientY: r.top + 80,
+      }));
+      // Continue drawing without waiting for the previous transaction to finish.
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  });
+  await expect(page.getByTestId('stroke-count')).toHaveText('2031筆');
+  await expect(page.getByTestId('save-status')).toHaveText('保存済み');
+  const data = await report(page, 'S-continuous');
+  expect(data['save-start'].totalCount).toBeGreaterThan(1);
+  expect(Math.max(...data['save-start'].samples.map((s: { durationMs: number }) => s.durationMs))).toBeLessThanOrEqual(1000);
+  expect(data['save-commit'].totalFailures).toBe(0);
+  await page.reload(); await expect(page.getByTestId('stroke-count')).toHaveText('2031筆');
+});
 test('PERF-04 P imports, switches and exports 20 text/image pages 10 times', async ({ page }) => {
   const buffer = await fixturePdf(); expect(buffer.byteLength).toBeLessThanOrEqual(5 * 1024 * 1024);
   await page.goto('/');

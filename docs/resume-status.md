@@ -1,5 +1,11 @@
 # 再開準備・受入監査（2026-10-10）
 
+## goal継続の監査入口
+
+2026-10-10のgoal継続で39 Aの全条項監査を完了。状態は「実装済み・実機確認待ち」。39 Aの[条項監査](acceptance-audit.md)、23機能票の[ENV-03内容監査](tdd-evidence-audit.md)、[正式H20項目の確認票](human-review.md)を整備した。Chromium60×3/Firefox60、npm test60/check、境界6/subpath2、S/L/Pと連続入力性能、CI成功。機械可読の最終判定はartifacts/AUDIT-acceptance-clauses.json、最新commit/CI/公開確認はartifacts/RESUME-summary.json。以下の「次のgoal」は再開準備時点の履歴。現在の進行状況はprogress.md先頭を正とする。
+
+製品固定版28cd18aから製品ソース・依存・コンテナ設定の変更なし。不足した自動検査を追加し、ツール変更時の破棄、A4混在PDF、保存障害時の未保存内容救出、診断dialog、連続入力保存を検証する。正式Hは引き続き全20 ID未回答であり、従来の定性回答を正式合格へ読み替えない。
+
 最新の結果・commit・公開状況はprogress.md先頭を正とする。本書は再開時の監査と、goal開始前に済ませる検証の記録。全A合格とH合格は区別する。
 
 ## 保全と統合
