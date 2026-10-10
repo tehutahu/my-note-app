@@ -27,3 +27,20 @@ test('PERF diagnostic report records real operations without notebook content', 
   expect(report.environment.userAgent).toContain('Mozilla');
   expect(report.version).toBeTruthy();
 });
+
+test('UI-02 diagnostic dialog names, keyboard focus trap and focus return', async ({ page }) => {
+  await page.goto('/');
+  const button = page.getByRole('button', { name: '動作の計測', exact: true });
+  await button.focus(); await page.keyboard.press('Enter');
+  const dialog = page.getByRole('dialog', { name: '動作の計測', exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: '閉じる', exact: true })).toBeFocused();
+  for (const control of await dialog.locator('button, select').all()) await expect(control).toHaveAccessibleName(/\S/);
+  for (const key of [...Array<string>(8).fill('Tab'), ...Array<string>(8).fill('Shift+Tab')]) {
+    await page.keyboard.press(key);
+    expect(await dialog.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    expect(await page.locator(':focus').evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  }
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0); await expect(button).toBeFocused();
+});

@@ -2,6 +2,19 @@
 
 更新日：2026-10-10
 
+## 2026-10-10 goal継続：条項・TDD監査（作業中）
+
+- goalはactive。前回の再開準備は実行証拠を増やした進捗として引き継いだ。下の「goalを開始していない」は前回履歴であり現在状態ではない。
+- 作業開始HEADは51f6e8d、変更なし。branch `test/acceptance-clause-audit`で監査中。既存reportは `/tmp/my-note-app-audit-uw4qiy40` に保全。ノート・バックアップ・専用volumeは保持。
+- Dockerはサンドボックス内socketアクセスのみ拒否、許可された経路でEngine29.0.1/Compose2.40.3接続成功。既存preview稼働。ホスト環境変更なし。
+- 39 Aのassertion/実装/実測対応を `docs/acceptance-audit.md`、23レビュー票のRED/GREEN内容監査を `docs/tdd-evidence-audit.md` に作成。移行票の途中失敗ログ参照と、転送票の曖昧なunit/check参照を訂正。過去ログは保持。
+- INK-05のtool変更検査が名前だけだったため、未確定操作のDB不変・次入力を補強。公開R4のA4/横長8ページの表示/独立マーカー/全ページ筆記/出力寸法も追加。既存製品で2成功（AUDIT-clause-browser.log）。初回PDF試験のfloat期待値誤りはAUDIT-pdf-review-first.log/traceに保持、製品REDとしない。
+- PERF-03連続入力30筆の単独4CPU/8GiB検査は成功。29保存開始の最大86ms≤1秒、commit中央値244.2ms/失敗0、全2031筆再表示。AUDIT-continuous-performance.log/results.json、AUDIT-PERF-S-continuous.json。既存S/L/P正式測定とは別に保持。
+- AUDIT-unit-check.log：npm test60＋lint/型/coverage/build成功。製品ソース・依存・コンテナ設定は28cd18aと差分0。
+- 正式H20項目は `docs/human-review.md` に端末別のURL/準備/操作/期待結果/測定条件/回答欄を作成。全件未回答。レビュー23票の先頭から現在の手順へリンクした。
+- 追加2試験を含む58E2E×3同一buildは全成功（AUDIT-stability-*、retry/skip/失敗0）。その終了後に保存失敗時の出力内容と診断dialogを補強し、AUDIT-save-dialog-first.logは関連3成功。製品修正なし。最終主要E2Eは60件。
+- 残件：最終の変更後npm test/check、60件の主要E2E3回/Firefox、report集計、CI/公開版確認、39 Aの最終合格判定と再開JSON更新。未回答Hは待ちのまま。まだ「実装済み・実機確認待ち」の最終宣言はしていない。
+
 ## 現在の状態（先頭は最新、以下の追記は作業履歴）
 
 **goal開始前の再開準備は完了。今回はgoalを開始していない。M0〜M5の主要機能・中断時のサンプル/報告変更を統合・公開した。全Aの条項別判定と正式Hは未完了。**

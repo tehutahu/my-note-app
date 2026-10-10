@@ -45,7 +45,7 @@ test('INK-02 指の移動・ピンチと指書き切替、ペン中のタッチ�
   await expect(page.getByTestId('stroke-count')).toHaveText('2筆');
 });
 
-test('INK-05 キャンセル・capture消失・ツール変更で途中の線を破棄', async ({ page }) => {
+test('INK-05 キャンセル・capture消失で途中の線を破棄', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'ノートを作る', exact: true }).click();
   const canvas = page.getByLabel('手書きキャンバス', { exact: true });
   for (const end of ['pointercancel', 'lostpointercapture']) {

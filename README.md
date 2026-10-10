@@ -8,6 +8,8 @@ Galaxy Tab S7+ / Galaxy S23 UltraのS PenとWindowsブラウザー向けの日�
 
 [確認用サンプル](https://tehutahu.github.io/my-note-app/samples/)は、筆記計測用S、PDF計測用P、回転・用紙確認用R4の合成データと操作案内です。公開到達とファイルの一致を確認済みです。結果は[進捗](docs/progress.md)を参照してください。サンプルの保存には通信が必要です。取り込みは既存ノートを残した独立コピーになります。
 
+[正式H20項目の確認手順と回答欄](docs/human-review.md)に、端末別の操作・期待結果・性能測定手順をまとめています。自動検証の根拠は[39 Aの条項監査](docs/acceptance-audit.md)と[ENV-03のTDD証拠監査](docs/tdd-evidence-audit.md)を参照してください。
+
 ## ローカルで動かす
 
 Node、依存、テスト、ブラウザーはDocker内のみで実行します。
