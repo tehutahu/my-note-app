@@ -9,6 +9,8 @@ test('PWA-03 worker-only updates have independent caches and reproducible versio
   try {
     await mkdir(join(dir, 'dist'));
     await writeFile(join(dir, 'dist/index.html'), '<title>fixture</title>');
+    await mkdir(join(dir, 'dist/samples'));
+    await writeFile(join(dir, 'dist/samples/index.html'), '<title>optional samples</title>');
     const source = await readFile('scripts/build-pwa.mjs', 'utf8');
     const script = join(dir, 'build-pwa.mjs');
     const build = async (code: string) => {
@@ -17,6 +19,7 @@ test('PWA-03 worker-only updates have independent caches and reproducible versio
       return await readFile(join(dir, 'dist/sw.js'), 'utf8');
     };
     const first = await build(source);
+    expect(first).not.toContain('./samples/index.html');
     expect(first).toContain('commit: "b946599"');
     expect(await build(source)).toBe(first);
     const changed = await build(source.replace('let updating = false;', 'let updating = false; /* worker update fixture */'));

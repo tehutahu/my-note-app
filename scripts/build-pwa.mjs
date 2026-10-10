@@ -28,10 +28,12 @@ async function files(dir) {
   const result = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const path = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) result.push(...await files(path)); else if (entry.name !== 'sw.js') result.push(path);
+    if (entry.isDirectory()) { if (path !== 'dist/samples') result.push(...await files(path)); } else if (entry.name !== 'sw.js') result.push(path);
   }
   return result.sort();
 }
+const fullCommit = /^[a-f0-9]{40}$/.test(process.env.BUILD_COMMIT || '') ? process.env.BUILD_COMMIT : null;
+await writeFile('dist/build-info.json', JSON.stringify({ commit: fullCommit }) + '\n');
 const assets = await files('dist'), hash = createHash('sha256');
 const commit = /^[a-f0-9]{40}$/.test(process.env.BUILD_COMMIT || '') ? process.env.BUILD_COMMIT.slice(0, 7) : 'ローカル';
 hash.update(commit);
@@ -59,6 +61,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request, url = new URL(request.url);
   if (request.method !== 'GET' || !url.href.startsWith(self.registration.scope)) return;
+  if (url.href.startsWith(new URL('./samples/', self.registration.scope).href)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const key = request.mode === 'navigate' ? new URL('./index.html', self.registration.scope).href : request;

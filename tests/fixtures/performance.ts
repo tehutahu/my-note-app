@@ -34,7 +34,9 @@ function image(): Buffer {
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), chunk('IHDR', header), chunk('IDAT', deflateSync(pixels)), chunk('IEND', Buffer.alloc(0))]);
 }
 export async function fixturePdf(): Promise<Buffer> {
-  const pdf = await PDFDocument.create(), font = await pdf.embedFont(StandardFonts.Helvetica), picture = await pdf.embedPng(image());
+  const pdf = await PDFDocument.create();
+  pdf.setCreationDate(new Date('2026-09-09T00:00:00.000Z')); pdf.setModificationDate(new Date('2026-09-09T00:00:00.000Z'));
+  const font = await pdf.embedFont(StandardFonts.Helvetica), picture = await pdf.embedPng(image());
   for (let i = 0; i < 20; i++) {
     const page = pdf.addPage([595.28, 841.89]);
     for (let line = 0; line < 20; line++) page.drawText(`Synthetic page ${i + 1} / line ${line + 1} / seed 20260909`, { x: 30, y: 800 - line * 18, size: 12, font });

@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test';
+import { buildMetadata } from './scripts/build-metadata';
 export default defineConfig({
+  metadata: buildMetadata(),
   testDir: './tests/e2e', retries: 0, workers: 1,
   outputDir: 'artifacts/playwright',
   reporter: [['list'], ['json', { outputFile: 'artifacts/e2e-results.json' }]],

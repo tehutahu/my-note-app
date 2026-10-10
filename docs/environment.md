@@ -1,5 +1,15 @@
 # コンテナ環境（2026-09-06）
 
+## 現在の再開環境（2026-10-10）
+
+以下の初期環境・障害は履歴。現在はDocker Engine29.0.1 / Compose2.40.3-desktop.1とgit/ghが利用可能。許可されたDocker実行経路を使い、ホスト設定を変更しない。RESUME-runtime.logでapp uid1000、Node22.23.2、pnpm12.3.4を実測。frozen install終了0、lockfile差分0。固定imageはcompose.yaml/Dockerfileを参照。
+
+PDF本番依存は承認・導入済み。コンテナ内package.json実測でpdfjs-dist6.3.289はApache-2.0、pdf-lib1.17.1はMIT。worker/cMaps/fonts/wasmは同一配信元に同梱しsubpathで検証する。
+
+公開mainは5f273fb、run34404001133のverify/deploy成功を再確認済み。最新の最終固定版・空volume・mount/uid・公開確認は[進捗](progress.md)と[受入監査](resume-status.md)へ記録する。
+
+## 初期状態と作業履歴
+
 ホスト上でNode/npm/pnpm/ブラウザーは実行・導入していない。
 
 - Docker Engine 29.0.1 / Compose 2.40.3-desktop.1。

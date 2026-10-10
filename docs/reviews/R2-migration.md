@@ -1,5 +1,7 @@
 # 保存形式の移行と障害時の復旧
 
+> この票には作成当時の状態・制限も残っています。2026-10-10以降の現在状態は[進捗](../progress.md)と[受入監査](../resume-status.md)を参照してください。過去の「未実装」「Git障害」「実行中」を現在の判定へ流用しません。
+
 受入ID: DATA-04。URL: http://localhost:4173 。旧版で作ったノートは起動時に更新され、同じページ順・筆跡で開く。別タブが更新を妨げている時は、別タブを閉じて再起動する案内を表示する。移行に失敗した場合は旧データを保持し、自動削除で復旧しない。
 
 TDD: `DATA-migration-red.log`4失敗→移行/abort/blocked/未知新版拒否を実装。`DATA-migration-ui-red.log`2失敗→起動画面の日本語案内を接続。途中のcheckではbranches84.88%が閾値未達だったため、接続終了通知と同期例外を検査して補強。`DATA-migration-green-2.log`と`DATA-migration-check-2.log`成功。

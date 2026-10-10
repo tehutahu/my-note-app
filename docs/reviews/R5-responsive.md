@@ -1,5 +1,7 @@
 # R5 画面幅・キーボード・横長PDF
 
+> この票には作成当時の状態・制限も残っています。2026-10-10以降の現在状態は[進捗](../progress.md)と[受入監査](../resume-status.md)を参照してください。過去の「未実装」「Git障害」「実行中」を現在の判定へ流用しません。
+
 - 状態：自動検証中、実機未回答
 - 対象：UI-01/02/03、PDF-01
 - URL：http://localhost:4173/ （production build後 docker compose up preview）。公開後の版は別途記録。
