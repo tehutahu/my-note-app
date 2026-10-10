@@ -2,9 +2,11 @@
 
 Galaxy Tab S7+ / Galaxy S23 UltraのS PenとWindowsブラウザー向けの日本語手書きノートアプリを開発中です。
 
-ペン・蛍光ペン・図形・背景・複数ページ・フォルダ・ゴミ箱、端末内保存、専用バックアップ、PDF取り込み/出力、オフライン起動を実装しています。現在は更新保護と定量的な受入検証を進めています。実機での書き心地は未確認です。
+ペン・蛍光ペン・図形・背景・複数ページ・フォルダ・ゴミ箱、端末内保存、専用バックアップ、PDF取り込み/出力、オフライン起動、更新保護、S Pen側面ボタン、性能診断を実装しています。現在は最終版の受入検証と実機レビューを進めています。両Androidの基本筆記について肯定回答が記録されていますが、正式な実機受入は未完了です。
 
 [HTTPSレビュー版を開く](https://tehutahu.github.io/my-note-app/)。画面の版表示でcommitを確認できます。localhostとは保存領域が異なるため、既存ノートを移す場合は専用バックアップを書き出してから読み込んでください。
+
+[確認用サンプル](https://tehutahu.github.io/my-note-app/samples/)は、筆記計測用S、PDF計測用P、回転・用紙確認用R4の合成データと操作案内です。サンプル追加版の公開確認結果は[進捗](docs/progress.md)に記録します。サンプルの保存には通信が必要です。取り込みは既存ノートを残した独立コピーになります。
 
 ## ローカルで動かす
 
@@ -32,6 +34,7 @@ docker compose up -d preview
 - [詳細技術設計](docs/architecture.md)
 - [受入基準](docs/acceptance.md)
 - [環境・固定版](docs/environment.md)
+- [受入の監査と再開手順](docs/resume-status.md)
 - [筆記のレビュー手順](docs/reviews/R1-pen.md)
 - [保存のレビュー手順](docs/reviews/R2-saving.md)
 - [バックアップのレビュー手順](docs/reviews/R3-transfer.md)

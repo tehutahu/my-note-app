@@ -9,9 +9,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs",
+    "build": "tsc --noEmit && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs && node --experimental-strip-types scripts/build-review-samples.mjs",
     "test": "vitest run",
-    "check": "eslint . && tsc --noEmit && vitest run --coverage && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs",
+    "check": "eslint . && tsc --noEmit && vitest run --coverage && vite build && node scripts/copy-pdf-assets.mjs && node scripts/build-pwa.mjs && node --experimental-strip-types scripts/build-review-samples.mjs",
     "e2e": "playwright test",
     "acceptance": "node --experimental-strip-types scripts/acceptance-results.mjs"
   },

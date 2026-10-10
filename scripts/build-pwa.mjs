@@ -28,7 +28,7 @@ async function files(dir) {
   const result = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const path = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) result.push(...await files(path)); else if (entry.name !== 'sw.js') result.push(path);
+    if (entry.isDirectory()) { if (path !== 'dist/samples') result.push(...await files(path)); } else if (entry.name !== 'sw.js') result.push(path);
   }
   return result.sort();
 }
@@ -61,6 +61,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request, url = new URL(request.url);
   if (request.method !== 'GET' || !url.href.startsWith(self.registration.scope)) return;
+  if (url.href.startsWith(new URL('./samples/', self.registration.scope).href)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const key = request.mode === 'navigate' ? new URL('./index.html', self.registration.scope).href : request;

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>てのひらノート — 確認用サンプル</title>
+<style>body{font:17px/1.8 system-ui,sans-serif;max-width:48rem;margin:2rem auto;padding:0 1.2rem;background:#fffef9;color:#243c35}a{color:#175346;display:inline-block;padding:.6rem .2rem}li{margin:.6rem 0}h1{font-size:1.7rem}h2{font-size:1.3rem;margin-top:2rem}code{overflow-wrap:anywhere}p{overflow-wrap:anywhere}:focus-visible{outline:3px solid #b65b28;outline-offset:3px}</style>
+<main>
+<a href="../">← ノートを開く</a>
+<h1>確認用サンプル</h1>
+<p>個人情報を含まない合成データです。保存したファイルをアプリの読み込み操作で追加すると、既存ノートを保ったまま別のノートが作られます。この案内とサンプルのダウンロードには通信が必要です。オフラインの確認前に保存と取り込みを済ませてください。</p>
+<ul>
+<li><a href="S.snote" download>筆記計測用ノート S を保存</a> — 1ページ、2000本×100点、図形100個。「バックアップを読み込む」から追加します。</li>
+<li><a href="P.pdf" download>PDF計測用 P を保存</a> — 文字と画像を含む20ページ。「PDFを取り込む」から追加します。</li>
+<li><a href="R4.pdf" download>回転・用紙確認用 R4 を保存</a> — A4縦横、4方向の回転、切り抜き領域のある計8ページ。</li>
+</ul>
+<h2>筆記と保存の計測（Android各端末）</h2>
+<ol>
+<li>Sを取り込み、ノートを開いて1本書き、「保存済み」を待ちます。</li>
+<li>画面上の「動作の計測」を開き、計測を開始して閉じます。</li>
+<li>10秒以上かけて文字や線を書きます。1本書く→「保存済み」を待つ操作も10回行います。</li>
+<li>「動作の計測」を開いて停止します。端末の温度と省電力設定を選び、計測JSONを書き出します。</li>
+</ol>
+<p>実イベントが1000件に届いていない場合は、後で筆記時間を延ばす確認をお願いします。記録はイベント処理時間で、ペン先から画面までの総遅延ではありません。ノートの内容は計測JSONに含まれません。</p>
+<h2>PDFの計測（Android各端末）</h2>
+<ol>
+<li>Pを一度取り込み、ページを切り替え、全ページを書き出して操作を準備します。</li>
+<li>新しく計測を開始します。Pを取り込む→表示完了を待つ→2ページ目を表示→PDFを書き出す、を10回行います。各回は独立コピーとして追加されます。</li>
+<li>計測を停止し、温度と省電力設定を選んでJSONを書き出します。不要な合成ノートは後からゴミ箱へ移動できます。</li>
+</ol>
+<h2>機能の確認</h2>
+<ul>
+<li>R4の全8ページで赤い丸を囲み、PDFを書き出します。WindowsのPDFビューアーで、丸の位置・向き・全ページと選択可能な文字を確認します。</li>
+<li>Androidで合成ノートを専用形式に書き出し、Windowsへ渡して読み込みます。マウスで印を追加して書き出し、Androidへ戻して印を確認します。各Androidで行います。</li>
+<li>「オフライン準備完了」の後に機内モードにし、アプリを閉じて開き直します。既存PDFへ書き、保存して再表示し、PDFと専用形式を出力します。保存後の再表示は3回確認します。</li>
+<li>Androidではホーム画面へ追加して独立したウィンドウで起動します。Windowsでも同じURLで、作成・背景や図形の変更・キーボード操作を確認します。</li>
+</ul>
+<p>結果には端末名、OS・ブラウザーの版、アプリ画面の版番号、気になった点を添えてください。計測JSONはこの会話へ添付できます。サンプルを開いただけで実機確認済みになることはありません。</p>
+</main></html>

@@ -1,17 +1,19 @@
 # 進捗と再開地点
 
-更新日：2026-09-09
+更新日：2026-10-10
 
 ## 現在の状態（先頭は最新、以下の追記は作業履歴）
 
-**M0〜M5の主要機能を実装しHTTPS公開済み。全A/全Hの達成は未完了。**
+**M0〜M5の主要機能は実装・HTTPS公開済み。今回はgoalを開始せず、再開準備と最終固定版の自動検証を進めている。全A/全Hの達成はまだ未判定。**
 
-- 公開URL：https://tehutahu.github.io/my-note-app/ 。公開確認済みcommit735fe93。PR #1〜#6統合済み、main run34319761380のverify/deploy成功。側面スイッチ・offline筆記保存/出力も公開サイトで確認（HTTPS-switch-live.log）。
-- ペン/消しゴム/Undo/Redo/指移動・ズーム/図形/蛍光ペン、ノート/ページ/フォルダ/ゴミ箱、保存失敗・競合救出、専用形式、PDF、PWA更新/subpathを実装。PDF.js/pdf-libは承認済み・導入済み。
-- Tab S7+／S23 Ultraの従来R1は「問題ない、書き心地もよい」と返答。数値/OS/browser/buildは未回答。追加した側面スイッチの実機確認を依頼中。他のHの代用にはしない。
-- 現在feat/performance-diagnostics。診断UI/計測/合成S/L/Pと保存・再描画最適化は作業中・未公開。PERF-03の初回未達（保存開始中央値568.55ms、commit2904.05ms）から改善し再測定中。PERF-optimized-check-2.logは56 tests/check成功。
-- 残り：PERF正式値、全受入対応表と不足境界、最終同一build3回、最終空volume再現、Windows/端末間共有/PDF外部viewer/オフライン等のH。未実施を合格にしない。
-- git/gh/Dockerは利用可能。Node/npm/pnpm/ブラウザー実行は全てコンテナ内。ブランチ作成/取り込み/マージはユーザーが包括承認済み。新規本番依存はこの追加機能では導入していない。
+- 公開mainは5f273fb（PR #1〜#11統合済み）。GitHubでrun34404001133のverify/deploy成功を2026-10-10に再確認。公開URL：https://tehutahu.github.io/my-note-app/ 。今回の新しいサンプル・受入報告は公開前。
+- ペン/側面スイッチ/消しゴム/Undo/Redo/指移動・ズーム/図形/蛍光ペン、ノート/ページ/フォルダ/ゴミ箱、保存失敗・競合救出・schema2移行、専用形式、PDF、PWA更新/subpath、診断・保存最適化を実装。PDF.js/pdf-libは承認済み・導入済み。新しい本番依存なし。
+- Tab S7+／S23 Ultraの従来R1には「問題ない、書き心地もよい」の返答記録がある。数値/OS/browser/buildは未回答。側面スイッチ、正式10分筆記、性能、Windows/受け渡し/PDF外部viewer/オフライン等のHは未確認。他Hの代用にしない。
+- test/acceptance-report。変更前HEAD c81c336、MERGE_HEAD5f273fb、競合の各版・全差分・未追跡を/tmp/my-note-app-resume-0itcx2ymへ保全。両側の進捗を残してcc8b717でマージを完了。既存編集の破棄なし。
+- 受入報告生成と実機レビュー用S/P/R4サンプルを整備。RESUME-install.logはfrozen install終了0、lockfile差分0。RESUME-final-unit.logは60件成功、RESUME-final-check.logはlint/型/coverage/build成功。RESUME-samples-subpath.logは既存PWA＋サンプルの2試験成功（27.5秒、retry0）。スクリーンショット追加後の最終固定版でも検証する。
+- 残り：固定版の全browser/境界報告、4CPU/8GiB性能、同一build3回、空volume再現と環境監査、条項別受入・TDD監査、CI/新公開版、必要H。未実施を合格にしない。詳細はdocs/resume-status.md。
+- 現在のDocker Engine29.0.1/Compose2.40.3-desktop.1、git/ghは許可された実行経路で利用可能。先のI/O error/gh接続障害は解消。ホスト設定/ランタイム変更なし。APP_UID1000、Node22.23.2、pnpm12.3.4、PDF依存ライセンスをRESUME-runtime.logで実測。
+- ユーザーはブランチ作成/取り込み/マージを包括承認済み。PDF依存2件も承認済み。再確認不要。今回のユーザー依頼は「goalコマンドを打つ直前までの再開順をすべて実施」。goal自体を起動しない。
 
 ## 初期の授権・障害記録（以下は履歴、現在は上記を参照）
 
@@ -369,3 +371,14 @@ PDF-shape-edge-red.logは長方形開始角の画素が背景になる不一致�
 ACCEPT-matrices-final-check.logは57テスト/check成功（終了0）。HTTPS-copy-live.logは公開9ed1e57で1成功（20.3秒、終了0）。入力とPDFの変更はこれから別PRで統合する。
 
 入力修正をc79d234でPR #10、PDF修正をa1398c2でPR #11（#10上のstack）へ送付。受入対応表の生成を追加中。ACCEPT-report-red.logで正常reportを変換できない不一致→ACCEPT-report-green.logで59テスト/check成功。実行証拠と全条項/H合格を分ける。ACCEPT-report-browsers.logで同じbuild154275e5f7380d6cのChromium/Firefox全体を実行中。
+
+
+## 2026-10-10 再開準備
+
+ユーザーがDockerを起動した後、サンドボックス内ではsocket権限の接続拒否、許可されたDocker経路ではEngine接続成功。システム設定変更で回避していない。既存ソース/lock/個人ノートを保持して再現・検証を進める。
+
+旧ACCEPT-report-browsers.logの「実行中」は、実ログではChromium/Firefox各56件成功、retry/skip/失敗0。unit-results.jsonにはサンプル追加後60件成功があった。既存のacceptance-results.jsonとboundary-results.jsonが無く、subpath報告も旧版でbuild情報が無いため、最終固定版の証拠を新しく生成する。
+
+サンプル生成の過去RED/GREENを保持し、既存サンプル変更に対してsubpathブラウザー回帰を追加。3ファイルの実SHA/サイズ、制御中のPWAからの表示、事前cache対象外、既存1筆保持、Sのコピー追加と2100要素を確認。回帰追加を未実装RED先行とは表記しない。
+
+次：固定commitを作成→単独性能→同一root build3回＋Firefox→境界/subpath→独立Compose空volume→acceptance集計→条項監査とCI/公開確認。途中結果はartifacts/RESUME-*へ保存し、最終結果を本書先頭へ追記する。
