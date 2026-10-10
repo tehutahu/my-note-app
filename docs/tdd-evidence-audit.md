@@ -35,3 +35,5 @@
 監査で訂正した参照：R2-migrationの `DATA-migration-ui-green.log` は28成功/1失敗である。最終成功は `DATA-migration-ui-green-2.log`（3成功）と最終統合56件の証拠。R3-transferの曖昧な「対応unit/check」は `XFER-ui-unit.log` / `XFER-ui-check.log` と明記した。
 
 初回失敗を製品REDとしない例：PWA-subpathのサーバー二重起動、PWA-commit fixtureの文字数、NOTE-pagesのlocator、INK-matrixの画面外消去座標、PERF-Lの準備timeout、今回のPDF試験のfloat期待値。これらも元ログを保持する。Firefox並列時の初期offline準備timeoutは原因未確定の履歴であり、修正済みとしない。
+
+追加監査票R5-clause-auditを含め24票を整備した。新規製品修正はなく、追加4 E2Eと連続入力性能の回帰監査、最後のTS変更後npm test60/check、最終Chromium60×3/Firefox60、CI成功を同票に記録。ENV-03は合格。H未実施の記載はHの未完了を意味し、現在のA状態は各票先頭と条項監査を正とする。

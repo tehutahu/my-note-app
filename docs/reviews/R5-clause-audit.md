@@ -1,7 +1,7 @@
 # R5 自動受入の最終条項監査
 
 - 対象：ENV-03、INK-05、DATA-02、PDF-01/02、UI-02、PERF-03、および全Aの証拠対応。
-- 状態：監査中。H20 IDは全件未回答。
+- 状態：自動受入合格・実機確認待ち。H20 IDは全件未回答。
 - URL：[公開アプリ](https://tehutahu.github.io/my-note-app/)、[合成サンプル](https://tehutahu.github.io/my-note-app/samples/)。固定機能版28cd18aと同一の製品ソース。
 - 操作・期待結果：[正式H確認票](../human-review.md)。今回の監査でユーザーへ新しいAの手動試験は要求しない。
 
@@ -22,3 +22,9 @@
 ## 制限・未確認
 
 過去Firefox並列実行のoffline初期準備timeoutは原因未確定として元ログとtraceを保持。同一製品buildで単独成功した事実と分ける。実S Pen・Windows外部PDFビューアー・機内モード・実機性能はユーザー未回答。全Aの判定は[条項監査](../acceptance-audit.md)、最終CIと公開版は[進捗](../progress.md)を参照。
+
+## 最終結果（2026-10-10）
+
+`AUDIT-final-unit-check.log`：最後のTS変更後npm test60、lint/型/coverage/build成功。`AUDIT-final-stability-{1,2,3}.log`：同じPWA 3a851f4e95820c39でChromium60件×3、`AUDIT-firefox.log`：同じbuildのFirefox60成功。retry/skip/失敗0、worker/build-info SHA不変。`AUDIT-final-stability-summary.json`に全report SHAと版を保存。
+
+試験固定commit15b6b1e、PR #14のpush/PR CI run38040883312/38040920323成功。CIでもfresh build/frozen/npm test/check/境界6/Chromium60/Firefox60/subpath2を実行。39 Aの最終判定は `AUDIT-acceptance-clauses.json`、192実行の索引は `acceptance-results.json`。文書の後続commitと最終公開版・CIは `RESUME-summary.json` に記録し、製品固定版28cd18aと区別する。

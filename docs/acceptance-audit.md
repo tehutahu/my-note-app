@@ -1,5 +1,7 @@
 # 自動受入の条項別監査
 
+**判定：39 Aすべて合格。実装済み・実機確認待ち。正式H20項目はすべて未回答。**
+
 2026-10-10。判定対象は製品固定版 `28cd18afa85af14d554c11b4785764632721be61` と同一の製品ソース。main `51f6e8d` は文書の追加であり、src/scripts/public/依存/コンテナ設定に差分がないことを確認した。今回追加するのは不足した受入検査と監査・レビュー案内。正式Hは[実機確認票](human-review.md)の全20 IDが未回答。
 
 `artifacts/acceptance-results.json` はテスト名とIDの索引。この文書は各assertion・実装・実測ログを読んだ条項判定であり、reportの `successful` だけから合格を推定しない。以下のファイル名は `tests/` または `artifacts/` を起点とする。
@@ -10,19 +12,19 @@
 | --- | --- |
 | コンテナ限定、固定ランナー、合成fixture | Dockerfile/Dockerfile.e2e/compose.yaml、docs/environment.md。ホストNode実行・依存導入なし。PDF/ノートは合成のみ。S/L/Pのseed20260909 |
 | 全unit・カバレッジ | AUDIT-unit-check.log：npm test60、lint/型/coverage/build成功。domain全対象：lines/statements/functions100%、branches98.87%。storage：lines99.12%、statements97.10%、functions95.31%、branches87.20%。vitest.config.tsは未importも含むinclude＋perFile閾値 |
-| 独立E2E25本以上・Firefox・skip/retry0 | 固定版のRESUME-stability各56成功、RESUME-firefox-isolated56成功。今回の4本追加後の60件全体結果はAUDIT-final-stabilityとAUDIT-firefoxのログ・JSONで確認する |
-| 同じbuildで3回連続 | RESUME-stability-summary.jsonは56×3成功、worker/build-info SHA不変。途中58×3も全成功。最終60×3の結果をAUDIT-final-stability-{1,2,3}-results.jsonへ保存 |
+| 独立E2E25本以上・Firefox・skip/retry0 | 固定版のRESUME-stability各56成功、RESUME-firefox-isolated56成功。追加後60件：Chromium×3/Firefoxとも全成功、retry/skip/失敗0。AUDIT-final-stability/AUDIT-firefoxのログ・JSONを確認済み |
+| 同じbuildで3回連続 | RESUME-stability-summary.jsonは56×3成功、worker/build-info SHA不変。途中58×3も全成功。最終60×3も全成功。AUDIT-final-stability-{1,2,3}-results.jsonとSHA比較を保存 |
 | 基準性能条件・生値 | RESUME-fixed-performance.log/results.json、RESUME-fixed-PERF-S/L/P.json：4CPU/8GiB cgroup、Chromium1280×800/DPR1、単独、warm後10回。連続入力補強はAUDIT-continuous-performance.log、PERF-S-continuous.json（同じ製品build） |
-| CI必須化 | .github/workflows/ci.yml：build/frozen/npm test/check/境界/Chromium/Firefox/subpath/報告を必須実行。retry=0。性能は専用条件のローカルsuiteで正式判定。既存main run38039275369は再照会でもverify/deploy成功。今回の試験変更のCI結果はprogress先頭に記録 |
+| CI必須化 | .github/workflows/ci.yml：build/frozen/npm test/check/境界/Chromium/Firefox/subpath/報告を必須実行。retry=0。性能は専用条件のローカルsuiteで正式判定。既存main run38039275369は再照会でもverify/deploy成功。試験変更15b6b1eのpush/PR run38040883312/38040920323も全成功。後続の文書CI・公開版はRESUME-summary.jsonに記録 |
 | 過去の失敗を保持 | RESUME-firefox-concurrent-failure-results.json（offline準備timeout2件）と単独56成功を両方保持。AUDIT-pdf-review-first.log（期待値のfloat精度誤り）は製品REDとして数えない |
 
 ## 39 A IDの条項と根拠
 
-各行は記載した全条項を対象とする。INK-06はH専用のためA合格数へ含めない。追加検査を含む最終統合判定は共通条件の実行完了後に確定する。
+各行は記載した全条項を対象とする。INK-06はH専用のためA合格数へ含めない。追加検査を含む共通条件も成功を確認し、全39 Aを合格と判定した。判定JSONはartifacts/AUDIT-acceptance-clauses.json。
 
 | ID | 条項別に確認した観測と実装 | テスト・実行証拠 |
 | --- | --- | --- |
-| ENV-01 | 別project/空volumeでbuild→frozen→npm test→check→E2Eが終了0。既存volume保持 | RESUME-clean-build/install/check/e2e.log、RESUME-clean-e2e-results.json（56成功）。機能・依存・Docker設定差分0 |
+| ENV-01 | 別project/空volumeでbuild→frozen→npm test→check→E2Eが終了0。既存volume保持 | RESUME-clean-build/install/check/e2e.log、RESUME-clean-e2e-results.json（56成功）。追加試験後もfresh CI run38040883312で同じ全手順と60E2E成功（AUDIT-push-ci.log）。機能・依存・Docker設定差分0 |
 | ENV-02 | app/e2e uid1000、ホーム/ルート/socket mountなし、依存専用volume、root所有の追跡ソース0 | compose.yaml、RESUME-environment-audit.json、RESUME-runtime.log |
 | ENV-03 | 23票の実際の失敗理由→修正→成功・変更後npm testを照合。初期git障害と後付け回帰を明記。移行成功ログ参照を是正 | [内容監査](tdd-evidence-audit.md)、AUDIT-tdd-evidence.json、各票。今回の試験追加はAUDIT-unit-check.log |
 | ENV-04 | Node/pnpm/Playwright/image tag/digest厳密固定、frozen installでlock差分0、生成物/秘密/個人データ追跡0 | Dockerfile/Dockerfile.e2e/package.json/pnpm-lock.yaml/.gitignore、docs/environment.md、RESUME-environment-audit.json |

@@ -2,20 +2,28 @@
 
 更新日：2026-10-10
 
-## 2026-10-10 goal継続：条項・TDD監査（作業中）
+## 2026-10-10 最終条項監査：実装済み・実機確認待ち
 
-- goalはactive。前回の再開準備は実行証拠を増やした進捗として引き継いだ。下の「goalを開始していない」は前回履歴であり現在状態ではない。
-- 作業開始HEADは51f6e8d、変更なし。branch `test/acceptance-clause-audit`で監査中。既存reportは `/tmp/my-note-app-audit-uw4qiy40` に保全。ノート・バックアップ・専用volumeは保持。
-- Dockerはサンドボックス内socketアクセスのみ拒否、許可された経路でEngine29.0.1/Compose2.40.3接続成功。既存preview稼働。ホスト環境変更なし。
-- 39 Aのassertion/実装/実測対応を `docs/acceptance-audit.md`、23レビュー票のRED/GREEN内容監査を `docs/tdd-evidence-audit.md` に作成。移行票の途中失敗ログ参照と、転送票の曖昧なunit/check参照を訂正。過去ログは保持。
-- INK-05のtool変更検査が名前だけだったため、未確定操作のDB不変・次入力を補強。公開R4のA4/横長8ページの表示/独立マーカー/全ページ筆記/出力寸法も追加。既存製品で2成功（AUDIT-clause-browser.log）。初回PDF試験のfloat期待値誤りはAUDIT-pdf-review-first.log/traceに保持、製品REDとしない。
-- PERF-03連続入力30筆の単独4CPU/8GiB検査は成功。29保存開始の最大86ms≤1秒、commit中央値244.2ms/失敗0、全2031筆再表示。AUDIT-continuous-performance.log/results.json、AUDIT-PERF-S-continuous.json。既存S/L/P正式測定とは別に保持。
-- AUDIT-unit-check.log：npm test60＋lint/型/coverage/build成功。製品ソース・依存・コンテナ設定は28cd18aと差分0。
-- 正式H20項目は `docs/human-review.md` に端末別のURL/準備/操作/期待結果/測定条件/回答欄を作成。全件未回答。レビュー23票の先頭から現在の手順へリンクした。
-- 追加2試験を含む58E2E×3同一buildは全成功（AUDIT-stability-*、retry/skip/失敗0）。その終了後に保存失敗時の出力内容と診断dialogを補強し、AUDIT-save-dialog-first.logは関連3成功。製品修正なし。最終主要E2Eは60件。
-- 残件：最終の変更後npm test/check、60件の主要E2E3回/Firefox、report集計、CI/公開版確認、39 Aの最終合格判定と再開JSON更新。未回答Hは待ちのまま。まだ「実装済み・実機確認待ち」の最終宣言はしていない。
+**39 Aすべて合格。正式H20項目は全件未回答。日常利用版の完了とは区別する。**
 
-## 現在の状態（先頭は最新、以下の追記は作業履歴）
+- [39 Aの条項監査](acceptance-audit.md)で各assertion・実装・実測を照合。[ENV-03内容監査](tdd-evidence-audit.md)で23票の実RED→GREENと変更後npm testを確認し、追加監査票を含め機能レビュー24票を整備。移行票の途中失敗ログ参照と転送票の曖昧なunit/check参照を是正。過去ログ・失敗・定性回答は保持。
+- 製品ソース・本番依存・コンテナ設定は機能固定版28cd18aと差分0（AUDIT-source-preservation.json）。不足したINK-05ツール変更時破棄、DATA-02保存遅延/Quota/未保存出力内容、PDF-01/02のA4混在8ページ、UI-02診断dialogを4 E2Eで補強。すべて既存製品で成功。PDF試験の初回float期待値誤りはログとtraceに保持し、製品REDとは扱わない。
+- 最後のTS変更後 `AUDIT-final-unit-check.log`：npm test60、lint/型/coverage/build終了0。domainはlines/statements/functions100%、branches98.87%；storageはlines99.12%、statements97.10%、functions95.31%、branches87.20%。
+- `AUDIT-final-stability-{1,2,3}.log`：Chromium60件×3回連続全成功。`AUDIT-firefox.log`：Firefox60成功（5.7分）。retry/skip/失敗0。同じroot PWA3a851f4e95820c39、full機能commit28cd18a、worker/build-info SHAが実行前後不変。結果とreport SHAは `AUDIT-final-stability-summary.json`。
+- 既存の正式S/L/P測定・境界6件・subpath2件・独立空volume再現を、同一製品ソースの証拠として保持。追加PERF-03連続30筆は単独4CPU/8GiBで1件成功、29保存開始の最大86ms≤1秒、commit中央値244.2ms、失敗0、2031筆再表示。`AUDIT-continuous-performance.log/results.json`、`AUDIT-PERF-S-continuous.json`。物理ペン総遅延ではない。
+- `acceptance-results.json`：7report/192実行/40 ID、successful=true、issues0、各report SHA付き。実行成功と条項判定は別。39 Aの最終合格は `AUDIT-acceptance-clauses.json`、Hはunverified。元の183実行の7 JSONは `/tmp/my-note-app-audit-uw4qiy40` と `artifacts/RESUME-pre-audit-reports/` に保全した。
+- 試験固定commit15b6b1ebb76faf311df5c2c244d6f013cba2594d、PR #14。push/PR CI run38040883312/38040920323成功。fresh build/frozen install/npm test/check/境界6/Chromium60/Firefox60/subpath2/集計を確認し、`AUDIT-push-ci.json/.log`、`AUDIT-pr-ci.json`に保存。後続の文書commitと最終mainのCI/公開到達は `artifacts/RESUME-summary.json` のfinalMainCommit/finalMainCi/finalHttpsVerificationに版付きで記録する。
+- 公開URL：https://tehutahu.github.io/my-note-app/ 。合成サンプル：https://tehutahu.github.io/my-note-app/samples/ 。[正式H20項目の端末別手順・期待結果・回答欄](human-review.md)から開始できる。確認時は画面の版を記録。各機能レビュー票の先頭もこの現在手順へリンクした。
+- 既存変更・ノート・バックアップ・専用volumeを保持。新規本番依存なし。禁止対象追跡0、root所有の追跡ソース0、lock差分0。Dockerはサンドボックス内socketのみ権限外で、許可された経路でEngine/Compose利用可能。ホスト環境変更なし。現在の環境障害なし。
+- Firefoxの以前の並列offline準備timeout2件は原因未確定の履歴として元report/traceを保持。今回と前回の単独成功を理由に、元の失敗を削除したり解消済みと断定していない。
+
+### 未完了と次の操作
+
+未完了Aなし。正式H未回答：INK-01/02/04/06/07、NOTE-01/03/05、DATA-01、XFER-01、PDF-01/03、PWA-01/02、UI-01/02/03、PERF-01/03/04。以前の両Android肯定回答を、正式10分/数値/版/Windows/性能結果へ補完しない。
+
+次はhuman-review.mdの手順で実機確認し、端末・OS・browser・画面の版・確認日・ID別結果と性能JSONを記録する。不具合が報告された場合は該当IDで失敗テストから修正。JS/TS変更後の次コマンドは `docker compose run --rm app npm test`、続けて `docker compose run --rm app pnpm run check` と関連E2E。変更がなければ成功済みの重い検証を理由なく繰り返さない。
+
+## 再開準備時点の状態（以下は履歴）
 
 **goal開始前の再開準備は完了。今回はgoalを開始していない。M0〜M5の主要機能・中断時のサンプル/報告変更を統合・公開した。全Aの条項別判定と正式Hは未完了。**
 
