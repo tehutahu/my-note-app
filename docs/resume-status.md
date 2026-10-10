@@ -8,15 +8,15 @@
 - 両側の進捗を保持して競合を解消。cc8b717でorigin/mainのマージを完了した。
 - GitHubでPR #10/#11の統合、main5f273fb、run34404001133のverify/deploy成功を確認。先のDocker I/O errorとgh接続障害は現在は解消している。
 - Docker Engine29.0.1 / Compose2.40.3-desktop.1。サンドボックス内のsocket権限だけでは接続できないため、許可されたDocker実行経路を使用。ホスト設定・ランタイムを変更しない。
-- frozen install終了0、lockfile差分0。現在のサンプル変更を保持し、npm test60件/check成功、サブパス2E2E成功。
+- frozen install終了0、lockfile差分0。サンプル変更を保持して28cd18aで固定。npm test60件/check成功、最終サブパス2E2E成功。
 
 ## 受入の条項監査
 
-以下は既存テストが扱う振る舞いの棚卸し。実行証拠、全条項の合格、実機Hは同じ意味ではない。最終固定版の報告・環境監査・安定性を記録するまで全A合格とはしない。
+以下は既存テストが扱う振る舞いの棚卸し。実行証拠、全条項の合格、実機Hは同じ意味ではない。最終固定版の報告・環境監査・安定性は記録済み。次のgoalで条項ごとの判定とENV-03の内容監査を行う。
 
 | ID | 既存の検証・確認対象 | H |
 | --- | --- | --- |
-| ENV-01 | 別Compose project/空volumeのbuild・frozen install・npm test・check・e2eを最終固定版で再現 | 対象外 |
+| ENV-01 | 固定版28cd18aの別Compose project/空volumeでbuild・frozen install・npm test・check・e2e成功 | 対象外 |
 | ENV-02 | app/e2eのuidとmount、専用依存volume、生成ソースの所有者 | 対象外 |
 | ENV-03 | 各レビュー票のRED/GREEN・npm test・受入ID、後付け試験の正直な記録。報告変換の成功だけで代用しない | 対象外 |
 | ENV-04 | 固定Node/pnpm/Playwright/image、lockfile不変、生成物/秘密/個人データ追跡0 | 対象外 |
@@ -57,13 +57,51 @@
 | PERF-03 | S、10保存、開始≤300ms/連続≤1秒、commit中央値≤1000ms・失敗表示。失敗時の待ち時間を隠さない | Android未確認 |
 | PERF-04 | P、warm後10回、取込≤15秒・表示≤1500ms・出力≤30秒、進行状態 | Android未確認 |
 
-## 残る完了判定と順序
+## 完了した再開準備
 
-1. サンプルを含む変更をcommitに固定し、同じbuildのChromium/Firefoxと境界/subpathの報告を生成する。
-2. 4CPU/8GiBの性能を他の検証と分離して計測する。生値とbuild、資源、viewport/DPRを記録する。
-3. 同じbuildで主要E2Eをretry=0で3回連続実行し、各reportを別名で保持する。
-4. 別Compose project/空volumeで再現し、uid/mount/所有者/lockfile/追跡対象を確認する。既存volumeを削除しない。
-5. 元reportのSHA付きacceptance-results.jsonを生成し、条項を監査する。successfulは全受入合格やH合格の宣言ではない。
-6. CI成功・公開到達を確認し、レビューURLと版を記録する。Hは合成サンプルと具体操作で依頼し、未回答を合格としない。
+| 準備 | 実結果・証拠（artifacts内） |
+| --- | --- |
+| 元変更保全・競合解消 | /tmpの退避、cc8b717、破棄なし |
+| 固定版・必須チェック | 28cd18a、unit60件・check成功、RESUME-final-unit/check.log |
+| 正式性能 | 単独4CPU/8GiB、3件成功、RESUME-fixed-performance.logとPERF-S/L/Pの生値 |
+| 同一build安定性 | Chromium56件×3回、retry/skip/失敗0、worker SHA一致、RESUME-stability-summary.json |
+| Firefox | 同一build単独56件成功、retry0、RESUME-firefox-isolated.log。先行54成功/2待ち失敗も保存 |
+| 境界・subpath | 境界6件/subpath2件成功、RESUME-boundaries.log / RESUME-fixed-subpath.log、サンプル画像保存 |
+| 別project/空volume | build→frozen install→npm test→check→E2E56件終了0、RESUME-clean-*.log/JSON |
+| 環境・追跡監査 | uid1000、禁止mount/追跡/root所有ソース0、lock不変、RESUME-environment-audit.json |
+| 報告集計 | 40 ID、6report、183実行、issues0、元report SHA付きacceptance-results.json |
+| CI・機能公開 | PR #12統合、main9529f31、run38037616789 verify/deploy成功、RESUME-main-ci.json |
+| 公開到達 | HTTPS/offline1件成功、samples4ファイルHTTP200/size/SHA一致、RESUME-https-live.log / RESUME-https-samples-results.json |
 
-/goalは今回開始しない。実行結果に応じてprogress.mdの次の一手を更新し、残件に絞った文案を提示する。
+rootのPWA版は3a851f4e95820c39、subpathはdeaf7e5cfc6981fe。browser/performanceの報告はfull commit28cd18afa85af14d554c11b4785764632721be61を記録。公開機能版9529f31とのツリー差分は0。文書の後続commitは機能固定版と区別する。
+
+集計コマンド：
+
+```sh
+docker compose run --rm app pnpm run acceptance artifacts/unit-results.json artifacts/boundary-results.json artifacts/e2e-results.json artifacts/firefox-results.json artifacts/subpath-results.json artifacts/performance-results.json
+```
+
+successfulは実行証拠の成功。条項監査やH合格の宣言ではない。ENV-01/02/04は環境監査を別証拠とし、H専用のINK-06に自動テストを割り当てない。/goalは今回開始していない。
+
+## 確認できた事実と推測
+
+- 主要機能のソース、関連unit/integration/E2Eが存在し、M0〜M5と側面スイッチ・診断UIを実装している。中断時に未コミットだったサンプル生成と受入報告も28cd18aで固定し、PR #12でmain9529f31へ統合した。28cd18aと9529f31のツリー差分は0。
+- 実装の途中として残るのは、全受入条項とTDD証拠の最終判定、および実機の正式確認。主要機能で未着手と確認できた項目はないが、仕様の全条項を満たしたという判定はまだ出していない。
+- 正式Hの20 IDは未確認。以前のR1の定性的返答は記録済みだが、数値やOS/browser/buildを補完しない。H待ちを独立した自動作業の停止理由にしない。
+- Firefoxの並列実行ではUI-01/03の320/412pxの2件がoffline初期準備を5秒で待てず失敗した。レイアウトの数値検査より前で停止している。失敗reportとtraceを保存し、同じbuild・待ち時間・retry0の単独実行で全56件成功を確認した。
+- 他の検証との資源競合がFirefoxの待ち時間に影響した可能性はあるが、原因は未確定。単独で成功しても元の失敗履歴を消さず、再現した場合は原因を調べる。これを製品の描画幅不具合や解消済みの不具合と断定しない。
+
+## 次のgoalで行うこと
+
+1. acceptance-results.jsonと本書の対応表から、39 IDのAの全条項を実装・テスト・実行証拠へ結び付ける。ENV-03はレビュー票の実RED/GREEN、変更後npm test、受入IDを内容まで確認する。23票の参照ログ157個が存在することだけではTDD達成の証明にしない。
+2. 実際の不足・不具合だけをTDDで修正する。仕様が不明なら確認し、数値目標や受入条件を推測で変更しない。既存ノート・バックアップ・変更・専用volumeを保持する。
+3. 正式HはAndroid2台の入力/側面スイッチ/10分筆記/性能、3端末のUI/保存/offline、各AndroidとWindowsの往復、Windowsの外部PDFビューアーを機能別に案内する。URL、画面の版、操作、期待結果、証拠、制限を示し、未回答は未確認のまま記録する。
+4. 全A・CI・機能レビュー票が揃って初めて「実装済み・実機確認待ち」とする。日常利用版の完了には必要Hを別に確認する。毎回progress.mdに未完了ID、次のコマンド、障害を残す。
+
+## goal文案
+
+```text
+/goal この手書きノートを、全自動受入条件を満たした「実装済み・実機確認待ち」まで完成させてください。START_HERE.mdと指定文書、docs/progress.md、docs/resume-status.mdを読み、2026-10-10の再開準備済み結果を引き継いでください。既存変更・個人ノート・バックアップ・専用volumeを保持し、完了済み検証を理由なく繰り返さないでください。
+まず39 IDのAの全条項とENV-03のTDD証拠を実装・テスト・実測へ対応付け、実際の不足だけをTDDで修正してください。Firefoxの先行初期準備timeoutと単独56件成功の両方を残し、再発時は原因を調べてください。仕様が不明なら確認し、推測で実装したり受入条件を下げたりしないでください。Node/pnpm/npm/test/build/Playwrightはコンテナ内のみ、JS/TS変更後はnpm test必須。新しい本番依存は事前確認し、承認済みPDF.js/pdf-libは再確認不要です。
+自動合格と正式H20 IDを別々に記録し、機能ごとに公開URL・版・操作・期待結果・証拠・制限を提示してください。実機回答待ちでも独立作業を進め、未回答を合格にせず、日常利用版の完了とは区別してください。全A・CI・レビュー票が揃った実装完了を達成し、各終了時にdocs/progress.mdへ未完了ID・次のコマンド・環境障害を残してください。
+```

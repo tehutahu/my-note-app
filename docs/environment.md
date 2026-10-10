@@ -6,7 +6,7 @@
 
 PDF本番依存は承認・導入済み。コンテナ内package.json実測でpdfjs-dist6.3.289はApache-2.0、pdf-lib1.17.1はMIT。worker/cMaps/fonts/wasmは同一配信元に同梱しsubpathで検証する。
 
-公開mainは5f273fb、run34404001133のverify/deploy成功を再確認済み。最新の最終固定版・空volume・mount/uid・公開確認は[進捗](progress.md)と[受入監査](resume-status.md)へ記録する。
+機能統合版main9529f31（PR #12）、run38037616789のverify/deploy成功を確認済み。公開HTTPSのoffline筆記・保存・再表示・二形式出力と、samplesの4ファイルのサイズ/SHA-256一致も確認した。後続の文書commitと区別し、固定測定版は28cd18aを使用する。両commitのツリー差分は0。最新の空volume・mount/uid・公開確認は[進捗](progress.md)と[受入監査](resume-status.md)を参照。
 
 ## 初期状態と作業履歴
 

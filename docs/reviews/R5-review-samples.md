@@ -1,7 +1,7 @@
 # R5 実機レビュー用の合成サンプル
 
 - 対象受入ID：PERF-01/03/04、PDF-01/03、XFER-01、PWA-01/02/04、DATA-01のH確認を補助。
-- 状態：生成とサブパスでのブラウザー検証成功。公開版・最終固定版の確認はprogress.mdを参照。Hは未回答。
+- 状態：生成、固定版28cd18aのサブパスブラウザー検証、公開版9529f31のファイル照合成功。Hは未回答。
 - 操作URL：https://tehutahu.github.io/my-note-app/samples/ 。公開版のcommitをアプリ画面で記録する。
 - 対象端末：Tab S7+、S23 Ultra、Windows ChromeまたはEdge。
 
@@ -21,6 +21,8 @@
 - 再開時：`RESUME-unit.log`、`RESUME-check.log`、`RESUME-samples-unit.log`、`RESUME-samples-check.log`は終了0。60件、lint/型/coverage/build成功。
 - ブラウザー：`RESUME-samples-subpath.log`、2件成功、終了0。制御中のPWAからサンプルへ遷移、3ファイルのダウンロードと実SHA-256、事前cache対象外、既存ノートの筆跡保持、Sのコピー取り込みを確認。
 - 追加ブラウザー試験は既存変更の回帰監査であり、未実装RED先行とは表記しない。現在の再現コマンドは`docker compose run --rm e2e sh -c 'BASE_PATH=/my-note-app/ pnpm run build && pnpm exec playwright test --config playwright.subpath.config.ts'`。
-- 画像：最終サブパス検証で`artifacts/review-samples.png`を保存する。
+- 最終固定版：`RESUME-fixed-subpath.log`は2件成功（15.2秒、retry0、終了0）。`RESUME-fixed-subpath-results.json`にfull commit28cd18aとPWA版deaf7e5cfc6981feを記録。追加したスクリーンショットもこの実行で保存した。
+- 公開確認：main9529f31のCI verify/deployはrun38037616789で成功。`RESUME-https-live.log`はHTTPS/offlineの1件成功、`RESUME-https-samples-results.json`はS/P/R4/案内HTMLのHTTP200、サイズ、SHA-256が固定版と一致。公開確認が個人ノートを変更しないよう、独立したブラウザーcontextと合成データだけを用いた。
+- 画像：`artifacts/review-samples.png`。
 
 サンプルの保存には通信が必要です。計測JSONはイベント処理時間であり、物理ペンから画面までの総遅延ではありません。サンプルの自動試験成功をH合格にしません。端末・OS・ブラウザー・版・実機結果・確認日は未回答です。
