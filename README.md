@@ -6,7 +6,7 @@ Galaxy Tab S7+ / Galaxy S23 UltraのS PenとWindowsブラウザー向けの日�
 
 [HTTPSレビュー版を開く](https://tehutahu.github.io/my-note-app/)。画面の版表示でcommitを確認できます。localhostとは保存領域が異なるため、既存ノートを移す場合は専用バックアップを書き出してから読み込んでください。
 
-[確認用サンプル](https://tehutahu.github.io/my-note-app/samples/)は、筆記計測用S、PDF計測用P、回転・用紙確認用R4の合成データと操作案内です。サンプル追加版の公開確認結果は[進捗](docs/progress.md)に記録します。サンプルの保存には通信が必要です。取り込みは既存ノートを残した独立コピーになります。
+[確認用サンプル](https://tehutahu.github.io/my-note-app/samples/)は、筆記計測用S、PDF計測用P、回転・用紙確認用R4の合成データと操作案内です。公開到達とファイルの一致を確認済みです。結果は[進捗](docs/progress.md)を参照してください。サンプルの保存には通信が必要です。取り込みは既存ノートを残した独立コピーになります。
 
 ## ローカルで動かす
 

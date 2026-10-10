@@ -4,16 +4,31 @@
 
 ## 現在の状態（先頭は最新、以下の追記は作業履歴）
 
-**M0〜M5の主要機能は実装・HTTPS公開済み。今回はgoalを開始せず、再開準備と最終固定版の自動検証を進めている。全A/全Hの達成はまだ未判定。**
+**goal開始前の再開準備は完了。今回はgoalを開始していない。M0〜M5の主要機能・中断時のサンプル/報告変更を統合・公開した。全Aの条項別判定と正式Hは未完了。**
 
-- 公開mainは5f273fb（PR #1〜#11統合済み）。GitHubでrun34404001133のverify/deploy成功を2026-10-10に再確認。公開URL：https://tehutahu.github.io/my-note-app/ 。今回の新しいサンプル・受入報告は公開前。
-- ペン/側面スイッチ/消しゴム/Undo/Redo/指移動・ズーム/図形/蛍光ペン、ノート/ページ/フォルダ/ゴミ箱、保存失敗・競合救出・schema2移行、専用形式、PDF、PWA更新/subpath、診断・保存最適化を実装。PDF.js/pdf-libは承認済み・導入済み。新しい本番依存なし。
-- Tab S7+／S23 Ultraの従来R1には「問題ない、書き心地もよい」の返答記録がある。数値/OS/browser/buildは未回答。側面スイッチ、正式10分筆記、性能、Windows/受け渡し/PDF外部viewer/オフライン等のHは未確認。他Hの代用にしない。
-- test/acceptance-report。変更前HEAD c81c336、MERGE_HEAD5f273fb、競合の各版・全差分・未追跡を/tmp/my-note-app-resume-0itcx2ymへ保全。両側の進捗を残してcc8b717でマージを完了。既存編集の破棄なし。
-- 受入報告生成と実機レビュー用S/P/R4サンプルを整備。RESUME-install.logはfrozen install終了0、lockfile差分0。RESUME-final-unit.logは60件成功、RESUME-final-check.logはlint/型/coverage/build成功。RESUME-samples-subpath.logは既存PWA＋サンプルの2試験成功（27.5秒、retry0）。スクリーンショット追加後の最終固定版でも検証する。
-- 残り：固定版の全browser/境界報告、4CPU/8GiB性能、同一build3回、空volume再現と環境監査、条項別受入・TDD監査、CI/新公開版、必要H。未実施を合格にしない。詳細はdocs/resume-status.md。
-- 現在のDocker Engine29.0.1/Compose2.40.3-desktop.1、git/ghは許可された実行経路で利用可能。先のI/O error/gh接続障害は解消。ホスト設定/ランタイム変更なし。APP_UID1000、Node22.23.2、pnpm12.3.4、PDF依存ライセンスをRESUME-runtime.logで実測。
-- ユーザーはブランチ作成/取り込み/マージを包括承認済み。PDF依存2件も承認済み。再確認不要。今回のユーザー依頼は「goalコマンドを打つ直前までの再開順をすべて実施」。goal自体を起動しない。
+- 元のHEAD c81c336、MERGE_HEAD5f273fb。競合の各版・全差分・未追跡・HEAD archiveを`/tmp/my-note-app-resume-0itcx2ym`へ保全し、両側の進捗を残してcc8b717でマージ完了。既存編集、ローカルバックアップ、ノート、専用volumeを破棄していない。
+- 機能固定版：`28cd18afa85af14d554c11b4785764632721be61`。PR #12のpush/PR CI（38037158205/38037179141）成功・セルフレビュー後にsquash統合。main機能版は`9529f31719cde369a46591678a331c2e7d4786e8`、run38037616789のverify/deploy成功。両commitのツリー差分は0。結果記録をdocs/resume-readyで作成し、文書の後続commitを機能固定版と区別する。
+- 公開到達検証の版は9529f31。URL：https://tehutahu.github.io/my-note-app/ 。`RESUME-https-live.log`はoffline PDF再表示・筆記保存・二形式出力・側面スイッチの1件成功。https-library.png/https-editor.pngを保存。文書の後続公開後も実機レビューでは画面の版を記録する。
+- サンプルURL：https://tehutahu.github.io/my-note-app/samples/ 。S/P/R4/案内HTMLはHTTP200、サイズ・SHA-256が固定版と一致（RESUME-https-samples-results.json）。Sのコピー取り込みで既存ノートを保持することを確認。サンプル取得は通信が必要だが、取り込んだデータは通常のoffline保存対象。新しい本番依存なし。PDF.js/pdf-libの承認は有効。
+- コンテナ内npm test60件、checkのlint/型/coverage/build成功。`RESUME-final-unit.log` / `RESUME-final-check.log`。domainのlines/statements/functions100%、branches98.87%；storageはlines99.12%、statements97.10%、functions95.31%、branches87.20%で規定以上。
+- Chromium主要E2Eは同一root build/PWA3a851f4e95820c39で56件×3回連続成功。retry/skip/失敗0、worker/build-infoの実行前後SHA一致。`RESUME-stability-{1,2,3}.log`と各results.json、`RESUME-stability-summary.json`を保持。Service Worker SHAはd48267fea5bdaeb80f5a177535063124c36653d7b64a70639d27df41dcde8acd。
+- Firefox単独再確認は56件成功（5.1分、retry0、同じroot build、RESUME-firefox-isolated.log）。先行する並列実行は54成功/2失敗で、UI-01/03の320/412pxがoffline準備の5秒待ちを超過しレイアウト検査前に停止。待ち時間・実装・buildを変えず単独で成功。原因は未確定。元のRESUME-fixed-firefox.log、RESUME-firefox-concurrent-failure-results.jsonとtraceを保持し、成功だけに書き換えない。
+- 境界6件成功（16.41秒、RESUME-boundaries.log）。subpath2件成功（15.2秒、retry0、RESUME-fixed-subpath.log）、full commit28cd18a / PWA deaf7e5cfc6981fe。制御中のPWA→samples、3ダウンロードSHA、事前cache対象外、既存1筆保持、S追加と2100要素、asset404/外部通信なしを確認。review-samples.pngを保存。
+- 正式性能：4CPU/8GiBのcgroup実測、1280×800/DPR1、他の検証と分離してS/L/P3件成功。固定commit28cd18a / root PWA3a851f4e95820c39。入力1020sample p95=0.20ms、保存開始10回中央値15.75ms/最大24.30ms、commit中央値202.05ms、L表示中央値75.95ms、P取込183.80ms/ページ243.75ms/出力32.30ms、失敗0。RESUME-fixed-performance.log/results.json、RESUME-fixed-PERF-S/L/P.jsonに生値・環境を保持。イベント処理時間であり実S Penの総遅延を証明しない。
+- ENV-01：git archive28cd18aの独立コピー`/tmp/my-note-app-clean-28cd18a-louhy_80`、新規Compose project `my-note-app-clean-20261010`の空volumeでbuild→frozen install→npm test→check→E2E56件がすべて終了0。RESUME-clean-build/install/check/e2e.logと各JSONを保持。元projectのvolumeは保持。ENV-02/04：app/e2e uid1000、home/root/socket mount0、依存専用volume、root所有の追跡ソース0、禁止対象追跡0、lock差分0。RESUME-environment-audit.json / RESUME-runtime.log。
+- 受入集計：`artifacts/acceptance-results.json`は6report・183実行・40 ID、successful=true、issues0。browser/performanceのbuildはすべてfull commit28cd18a。元reportのSHA-256付き。これは実行証拠の成功であり、39 IDのA全条項合格ではない。H20 IDはunverified。テスト名のないENV-01/02/04は上記別監査、INK-06はH専用。
+- レビュー23票の参照ログ157個はすべて存在（RESUME-review-evidence-inventory.json）。実REDの理由・順序・変更後npm test等の内容監査はENV-03の残件。実装後に追加した回帰試験をRED先行とは記録していない。既存の実RED/GREEN履歴は保持。
+- 従来R1のTab S7+／S23 Ultra「問題ない、書き心地もよい」は定性結果として記録済み。数値/OS/browser/build未回答。正式10分筆記、側面スイッチ、性能、Windows、共通UI/保存/offline、受け渡し、外部PDF viewerの必要Hは未確認。必要端末別に判定し、従来返答で補完しない。
+- Docker Engine29.0.1/Compose2.40.3-desktop.1、git/ghは許可された実行経路で利用可能。app Node22.23.2/pnpm12.3.4を実測。先のI/O/gh障害は解消。ホストランタイム導入・システム設定変更なし。ブランチ作成/取り込み/マージとPDF本番依存2件は既承認、再確認不要。
+
+## 次の一手（再開準備後）
+
+詳細・ID対応・事実と推測・goal文案は[再開監査](resume-status.md)。現在の環境障害はなし。Firefoxの先行待ち失敗は原因未確定の履歴として残す。
+
+1. 現在ブランチと変更を`git status --short --branch`で確認し、START_HERE.md→本書→設計/受入/レビュー規約を読む。既存変更を保持する。
+2. 39 A IDの全条項をテスト/実測/環境監査と照合し、特にENV-03のTDD内容監査を完了する。実際の不足があればTDDで修正。不明仕様は推測で実装せず確認する。docs/resume-status.mdの表を再開地点とする。
+3. H未確認ID：INK-01/02/04/06/07、NOTE-01/03/05、DATA-01、XFER-01、PDF-01/03、PWA-01/02、UI-01/02/03、PERF-01/03/04。機能別のURL・操作・期待結果・証拠・制限を提示し、実機回答を別記録。回答待ちは独立作業を止めない。
+4. JS/TS修正後の次コマンドは`docker compose run --rm app npm test`。続けてcheckと該当suite。変更がなければ完了済みの重い検証を理由なく再実行しない。全A判定後もH未回答を合格にしない。
 
 ## 初期の授権・障害記録（以下は履歴、現在は上記を参照）
 
